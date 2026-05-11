@@ -1,0 +1,152 @@
+
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{CS3243 Project Report}
+\lhead{IoT Devices and Applications}
+\cfoot{\thepage}
+\setlength{\headheight}{14.5pt}
+
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \rhead{CS3243 Project Report}
+    \lhead{IoT Devices and Applications}
+    \cfoot{\thepage}
+}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+\title{
+    \textbf{Automated Chemical Dosing System for Hospitals}\\
+    \textbf{System Design Report} \\
+    \large CS3243 - IoT Devices and Applications
+}
+
+\author{
+    KR Kanes Rakeshan \\
+    230518C
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+\subsection{Background}
+
+Hospitals use specialized disinfectant chemicals to sterilize medical instruments and equipment.
+
+\subsection{Objectives}
+
+\begin{itemize}
+    \item Design a complete IoT-based chemical dispensing solution
+    \item Implement automatic refill control using ESP32
+    \item Monitor water level using non-contact sensing
+    \item Implement fault detection and alarm generation
+\end{itemize}
+
+\section{Proposed IoT System Architecture}
+
+\subsection{System Overview}
+
+The proposed system consists of:
+\begin{itemize}
+    \item Purified water tank
+    \item Concentrated chemical supply tank
+    \item Mixing chamber
+    \item Dispensing tanks
+    \item ESP32-based controller
+\end{itemize}
+
+\section{Water Level Measurement and Chemical Estimation}
+
+\subsection{Water Tank Measurement}
+
+An ultrasonic sensor was selected for non-contact level measurement.
+
+\begin{equation}
+Water\ Level = Tank\ Height - Measured\ Distance
+\end{equation}
+
+\subsection{Chemical Estimation}
+
+\begin{equation}
+Remaining\ Chemical = Initial\ Volume - \sum Dispensed\ Volume
+\end{equation}
+
+\section{Component Selection}
+
+\subsection{ESP32 Controller}
+
+ESP32 was selected due to:
+\begin{itemize}
+    \item Built-in WiFi
+    \item PWM support
+    \item ADC support
+    \item Low cost
+\end{itemize}
+
+\section{Fault Detection}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lll}
+\toprule
+Failure & Detection & Action \\
+\midrule
+Pump Failure & No flow pulses & Alarm \\
+Blocked Valve & No flow & Stop refill \\
+Leakage & Flow mismatch & Shutdown \\
+\bottomrule
+\end{tabular}
+\caption{Fault Detection Mechanisms}
+\end{table}
+
+\section{Simulation}
+
+The system was simulated using WokWi with:
+\begin{itemize}
+    \item ESP32
+    \item Ultrasonic sensor
+    \item Flow pulse simulation
+    \item Alarm system
+\end{itemize}
+
+\section{Conclusion}
+
+An IoT-based automated hospital chemical dispensing system was successfully designed and simulated.
+
+\begin{thebibliography}{9}
+
+\bibitem{book1}
+Adrian McEwen and Hakim Cassimally,
+\textit{Designing the Internet of Things}.
+
+\bibitem{esp32}
+Espressif Systems,
+ESP32 Technical Reference Manual.
+
+\end{thebibliography}
+
+\end{document}
