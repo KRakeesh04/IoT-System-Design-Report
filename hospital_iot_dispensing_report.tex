@@ -1,5 +1,5 @@
 
-\documentclass[12pt,a4paper]{article}
+\documentclass[12pt,a4paper]{report}
 
 \usepackage[a4paper,margin=1in]{geometry}
 \usepackage{graphicx}
@@ -13,6 +13,9 @@
 \usepackage{xcolor}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
+
+% Rename bibliography heading
+\renewcommand{\bibname}{References}
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -28,12 +31,18 @@
     \cfoot{\thepage}
 }
 
+\titleformat{\chapter}[display]
+    {\normalfont\bfseries\Huge}
+    {\chaptername\ \thechapter}
+    {0pt}
+    {\Huge}
+\titlespacing*{\chapter}{0pt}{0pt}{24pt}
 \titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
 \titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
 
 \title{
-    \textbf{Automated Chemical Dosing System for Hospitals}\\
-    \textbf{System Design Report} \\
+    \textbf{Hospital Automated Chemical Dosing System}\\
+    \textbf{Design Report} \\
     \large CS3243 - IoT Devices and Applications
 }
 
@@ -51,14 +60,13 @@
 
 \newpage
 
-\section{Introduction}
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
 
-\subsection{Background}
-
+\section*{Background}
 Hospitals use specialized disinfectant chemicals to sterilize medical instruments and equipment.
 
-\subsection{Objectives}
-
+\section*{Objectives}
 \begin{itemize}
     \item Design a complete IoT-based chemical dispensing solution
     \item Implement automatic refill control using ESP32
@@ -66,10 +74,8 @@ Hospitals use specialized disinfectant chemicals to sterilize medical instrument
     \item Implement fault detection and alarm generation
 \end{itemize}
 
-\section{Proposed IoT System Architecture}
-
-\subsection{System Overview}
-
+\section*{Proposed IoT System Architecture}
+\subsection*{System Overview}
 The proposed system consists of:
 \begin{itemize}
     \item Purified water tank
@@ -79,10 +85,11 @@ The proposed system consists of:
     \item ESP32-based controller
 \end{itemize}
 
+\chapter{Method to Measure Water Level and Remaining Chemical Levels}
+
 \section{Water Level Measurement and Chemical Estimation}
 
 \subsection{Water Tank Measurement}
-
 An ultrasonic sensor was selected for non-contact level measurement.
 
 \begin{equation}
@@ -90,15 +97,18 @@ Water\ Level = Tank\ Height - Measured\ Distance
 \end{equation}
 
 \subsection{Chemical Estimation}
-
 \begin{equation}
 Remaining\ Chemical = Initial\ Volume - \sum Dispensed\ Volume
 \end{equation}
 
+\section{Notes / Remaining Work}
+\noindent\textit{Placeholder. Add constraints and justify sensor/method choices based on the given constraints.}
+
+\chapter{Component Selection (Valves, Flow Meters, Pump, Sensors, etc.)}
+
 \section{Component Selection}
 
 \subsection{ESP32 Controller}
-
 ESP32 was selected due to:
 \begin{itemize}
     \item Built-in WiFi
@@ -107,8 +117,12 @@ ESP32 was selected due to:
     \item Low cost
 \end{itemize}
 
-\section{Fault Detection}
+\section{Market Evaluation (Minimum Three Products)}
+\noindent\textit{Placeholder. Compare at least three products for each required component (features + cost).}
 
+\chapter{Failure Identification, Detection, and Fail-Safe Methods}
+
+\section{Fault Detection}
 \begin{table}[H]
 \centering
 \begin{tabular}{lll}
@@ -123,8 +137,24 @@ Leakage & Flow mismatch & Shutdown \\
 \caption{Fault Detection Mechanisms}
 \end{table}
 
-\section{Simulation}
+\section{Sensor-Based and Computational Failure Detection}
+\noindent\textit{Placeholder. List potential failures, detection method(s), and fail-safe actions.}
 
+\chapter{Data Collection and Communication to Central Controller}
+\noindent\textit{Placeholder. Evaluate at least two communication methods suitable for the distance/distribution.}
+
+\chapter{Complete System Schematic Block Diagram}
+\noindent\textit{Placeholder. Insert the complete schematic block diagram of all system components.}
+
+\chapter{Controller and Sensor Connection Schematic}
+\noindent\textit{Placeholder. Insert a schematic of the controller and connected sensors.}
+
+\chapter{Operational State Diagram / Flow Chart for IoT Components}
+\noindent\textit{Placeholder. Insert the algorithm flow chart / state diagram per IoT component.}
+
+\chapter{Simulation Implementation (TinkerCad/WokWi) and Source Code Attachment}
+
+\section{Simulation}
 The system was simulated using WokWi with:
 \begin{itemize}
     \item ESP32
@@ -133,19 +163,23 @@ The system was simulated using WokWi with:
     \item Alarm system
 \end{itemize}
 
-\section{Conclusion}
+\section{Source Code (Attachment)}
+\noindent\textit{Placeholder. Attach well documented source code and reference it here.}
 
+\chapter*{Conclusion}
+\addcontentsline{toc}{chapter}{Conclusion}
 An IoT-based automated hospital chemical dispensing system was successfully designed and simulated.
 
 \begin{thebibliography}{9}
+\addcontentsline{toc}{chapter}{References}
 
-\bibitem{book1}
-Adrian McEwen and Hakim Cassimally,
-\textit{Designing the Internet of Things}.
+% \bibitem{book1}
+% Adrian McEwen and Hakim Cassimally,
+% \textit{Designing the Internet of Things}.
 
-\bibitem{esp32}
-Espressif Systems,
-ESP32 Technical Reference Manual.
+% \bibitem{esp32}
+% Espressif Systems,
+% ESP32 Technical Reference Manual.
 
 \end{thebibliography}
 
