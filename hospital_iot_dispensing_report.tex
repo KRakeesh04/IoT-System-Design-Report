@@ -8,7 +8,9 @@
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
+\usepackage{tabularx}
 \usepackage{hyperref}
+\usepackage{xurl}
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{fancyhdr}
@@ -90,35 +92,714 @@ The proposed system consists of:
 \section{Water Level Measurement and Chemical Estimation}
 
 \subsection{Water Tank Measurement}
-An ultrasonic sensor was selected for non-contact level measurement.
+
+A non-contact ultrasonic sensor was selected for measuring the purified water tank level because the hospital requested that no sensing device should be installed inside the tank due to periodic cleaning and maintenance operations.
+
+The ultrasonic sensor is mounted at the top of the tank and measures the distance between the sensor and the water surface. Since the sensor measures the empty space above the water, the actual water level can be determined by subtracting the measured distance from the effective internal height of the tank.
+
+To improve measurement accuracy, the thickness of the tank lid and the wall thickness of the cylindrical tank are considered during calibration. The internal dimensions of the tank are used instead of external dimensions when calculating the actual water capacity.
+
+Let:
+
+\begin{itemize}
+    \item $LT$ = Lid thickness
+    \item $WT$ = Tank wall thickness
+    \item $H_{ext}$ = External tank height
+    \item $D_{ext}$ = External tank diameter
+    \item $d$ = Measured distance from ultrasonic sensor to water surface
+\end{itemize}
+
+The effective internal tank dimensions are calculated as:
 
 \begin{equation}
-Water\ Level = Tank\ Height - Measured\ Distance
+H_{int} = H_{ext} - LT - WT
 \end{equation}
 
-\subsection{Chemical Estimation}
+\begin{equation}
+r_{int} = \frac{D_{ext}}{2} - WT
+\end{equation}
+
+The total internal tank volume is therefore:
+
+\begin{equation}
+V_{tank} = \pi r_{int}^{2} H_{int}
+\end{equation}
+
+The water level inside the tank is calculated as:
+
+\begin{equation}
+Water\ Level = H_{int} - d
+\end{equation}
+
+The remaining water volume can then be estimated using:
+
+\begin{equation}
+V_{water} = \pi r_{int}^{2} (Water\ Level)
+\end{equation}
+
+The use of ultrasonic sensing provides several advantages:
+
+\begin{itemize}
+    \item Non-contact operation
+    \item Hygienic measurement
+    \item Reduced maintenance
+    \item Protection against sensor damage during tank cleaning
+\end{itemize}
+
+\subsection{Chemical Estimation and Dispensing Control}
+
+The system uses two separate liquid systems:
+
+\begin{itemize}
+    \item Concentrated chemical storage tank
+    \item Diluted chemical dispensing tanks
+\end{itemize}
+
+According to the project constraints, only a low-level sensor can be installed in each dispensing tank. Therefore, a simple float-type low-level switch is used to detect when the dispensing tank requires refilling.
+
+The concentrated chemical tank does not allow internal level sensors. Therefore, the remaining chemical quantity is estimated using a hybrid computational and external sensing approach.
+
+Initially, the total volume of concentrated chemical inside the tank is known. During operation, the flow meter continuously measures the amount of chemical dispensed into the mixing chamber. The controller maintains a cumulative record of the total dispensed chemical volume.
+
+The remaining chemical quantity is estimated using:
+
 \begin{equation}
 Remaining\ Chemical = Initial\ Volume - \sum Dispensed\ Volume
 \end{equation}
 
-\section{Notes / Remaining Work}
-\noindent\textit{Placeholder. Add constraints and justify sensor/method choices based on the given constraints.}
+To improve reliability and detect abnormalities such as leakage, an external load cell (weight sensor) can additionally be installed beneath the concentrated chemical container. The measured weight reduction can then be compared against the expected dispensed volume obtained from the flow meter.
 
-\chapter{Component Selection (Valves, Flow Meters, Pump, Sensors, etc.)}
+This dual-verification method improves system reliability by enabling:
 
-\section{Component Selection}
-
-\subsection{ESP32 Controller}
-ESP32 was selected due to:
 \begin{itemize}
-    \item Built-in WiFi
-    \item PWM support
-    \item ADC support
-    \item Low cost
+    \item Leakage detection
+    \item Flow meter fault detection
+    \item Dry tank detection
+    \item Abnormal dispensing detection
 \end{itemize}
 
-\section{Market Evaluation (Minimum Three Products)}
-\noindent\textit{Placeholder. Compare at least three products for each required component (features + cost).}
+The dispensing process is controlled using a PWM-controlled peristaltic pump together with a flow meter. Although PWM adjusts the pump speed, it does not guarantee accurate liquid flow due to variations in pressure, viscosity, tubing resistance, and pump wear. Therefore, actual flow measurement using a flow sensor is essential for accurate dispensing control.
+
+The refill operation stops automatically once the required target volume has been measured by the flow meter.
+
+\section{Remaining Work}
+
+The current implementation demonstrates the operational logic of the automated dispensing system using a single dispensing tank in a simulation environment. Several practical and industrial considerations remain for full-scale deployment.
+
+\begin{itemize}
+
+    \item The current prototype uses simulated flow pulses instead of a real industrial flow sensor.
+
+    \item Communication between multiple dispensing tanks and the central controller was not fully implemented in the simulation and can be extended using MQTT, WiFi, or ZigBee communication protocols.
+
+    \item The present simulation demonstrates only one dispensing tank. In a real hospital deployment, multiple dispensing tanks would be managed using a queue-based refill scheduling algorithm.
+
+    \item The chemical concentration control was conceptually designed but not physically validated using real chemical mixing equipment.
+
+    \item Cloud-based monitoring dashboards and mobile notifications can be integrated in future implementations.
+
+    \item Additional industrial safety mechanisms such as redundant sensors, emergency shutoff systems, and battery backup systems may be incorporated for higher reliability.
+
+\end{itemize}
+
+Despite these limitations, the proposed system successfully demonstrates the core concepts of IoT-based automated chemical dispensing, including sensing, control, fault detection, and automated refill management.
+
+
+
+\chapter{Component Selection}
+
+\section{Selected Components List}
+
+\begin{itemize}
+
+    \item ESP32 DevKit V1 Microcontroller
+    \item Ultrasonic Sensor for Water Tank Level Measurement
+    \item Load Cell with HX711 Module for Concentrated Chemical Tank Monitoring
+    \item Hall-Effect Flow Sensor for Flow Measurement
+    \item Capacitive Sensor for Dispensing Tank Level Detection
+    \item Peristaltic Pump for Chemical Dispensing
+    \item Normally Closed Solenoid Valve for Flow Control
+    \item Piezo Buzzer for Alarm Indication
+    \item LED Indicators for System Status Display
+    \item Relay / MOSFET Driver Module for Pump and Valve Control
+    \item WiFi Communication using ESP32 Built-in Module
+
+\end{itemize}
+
+\section{Controller Comparison}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{3cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Feature} & \textbf{ESP32} & \textbf{Raspberry Pi 4} & \textbf{Arduino UNO} \\
+\hline
+
+Processing Capability &
+Dual-core microcontroller &
+Single-board computer &
+Basic microcontroller \\
+\hline
+
+Built-in WiFi &
+Yes &
+Yes &
+No \\
+\hline
+
+GPIO Pins &
+Multiple GPIO pins &
+Multiple GPIO pins &
+Limited GPIO pins \\
+\hline
+
+PWM Support &
+Yes &
+Limited native support &
+Yes \\
+\hline
+
+Analog Input Support &
+Yes &
+Requires external ADC &
+Yes \\
+\hline
+
+Power Consumption &
+Low &
+High &
+Low \\
+\hline
+
+Operating System &
+Not required &
+Linux operating system required &
+Not required \\
+\hline
+
+Ease of IoT Integration &
+Easy &
+Moderate &
+Requires external WiFi module \\
+\hline
+
+Real-Time Control Capability &
+Good &
+Moderate &
+Good \\
+\hline
+
+Approximate Market Price (2026) &
+RS. 1,100 -- 9,000 &
+RS. 8,800 -- 125,000 &
+RS. 995 -- 3,750 \\
+\hline
+
+Suitability for This Project &
+Highly suitable &
+Overpowered &
+Limited features \\
+\hline
+
+Product Link &
+\url{https://www.vseeds.lk/products/esp32-dev-kit-v1} &
+\url{https://tronic.lk/product/raspberry-pi-4-model-b-4gb-original-uk} &
+\url{https://tronic.lk/product/arduino-uno-original-development-board-with-usb-cable} \\
+\hline
+
+\end{tabularx}
+\caption{Comparison of ESP32, Raspberry Pi 4, and Arduino UNO}
+\end{table}
+
+ESP32 was selected because it provides built-in WiFi support, sufficient GPIO pins, low power consumption, and supports real-time monitoring and control at a low cost.
+
+\section{Water Tank Level Sensor Comparison}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{3cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Feature} & \textbf{Ultrasonic Sensor} & \textbf{Float Sensor} & \textbf{Capacitive Sensor} \\
+\hline
+
+Measurement Method &
+Non-contact distance measurement &
+Mechanical float detection &
+Capacitance-based liquid detection \\
+\hline
+
+Sensor Contact with Liquid &
+No &
+Yes &
+Usually yes \\
+\hline
+
+Maintenance Requirement &
+Low &
+Moderate &
+Moderate \\
+\hline
+
+Suitability for Hygienic Environments &
+Highly suitable &
+Less suitable &
+Suitable \\
+\hline
+
+Ease of Installation &
+Easy &
+Moderate &
+Moderate \\
+\hline
+
+Continuous Monitoring &
+Yes &
+Limited &
+Yes \\
+\hline
+
+Corrosion Resistance &
+High &
+Moderate &
+Moderate \\
+\hline
+
+Cleaning Compatibility &
+Excellent &
+Limited &
+Moderate \\
+\hline
+
+Approximate Market Price (2026) &
+RS. 1,000 -- 2,500 &
+RS. 400 -- 2,000 &
+RS. 1,800 -- 4,000 \\
+\hline
+
+Suitability for This Project &
+Highly suitable &
+Limited &
+Moderately suitable \\
+\hline
+
+Product Link &
+\url{https://tronic.lk/product/jsn-sr04t-waterproof-ultrasonic-distance-measuring-modu} &
+\url{https://tronic.lk/product/water-level-sensor-float-switch-right-angle} &
+\url{https://tronic.lk/product/non-contact-tank-liquid-water-level-sensor-12-24v} \\
+\hline
+
+\end{tabularx}
+\caption{Comparison of Water Tank Level Sensors}
+\end{table}
+
+The ultrasonic sensor was selected because it provides non-contact water level measurement, easy maintenance, and is suitable for hygienic hospital environments.
+
+\section{Chemical Tank Monitoring Comparison}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{3cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Feature} & \textbf{Load Cell Sensor} & \textbf{Ultrasonic Sensor} & \textbf{Float Sensor} \\
+\hline
+
+Measurement Method &
+Weight measurement &
+Distance measurement &
+Mechanical float detection \\
+\hline
+
+External Installation &
+Yes &
+Yes &
+No \\
+\hline
+
+Sensor Contact with Chemical &
+No &
+No &
+Yes \\
+\hline
+
+Leakage Detection &
+Yes &
+Limited &
+No \\
+\hline
+
+Maintenance Requirement &
+Low &
+Low &
+Moderate \\
+\hline
+
+Suitability for Chemical Tank &
+Highly suitable &
+Moderately suitable &
+Limited \\
+\hline
+
+Continuous Monitoring &
+Yes &
+Yes &
+Limited \\
+\hline
+
+ESP32 Integration &
+Easy &
+Easy &
+Easy \\
+\hline
+
+Approximate Market Price (2026) &
+RS. 200 -- 1,000 &
+RS. 1,000 -- 2,500 &
+RS. 400 -- 2,000 \\
+\hline
+
+Suitability for This Project &
+Highly suitable &
+Moderately suitable &
+Limited \\
+\hline
+
+Product Link &
+\url{https://tronic.lk/product/load-cell-20kg} &
+\url{https://tronic.lk/product/jsn-sr04t-waterproof-ultrasonic-distance-measuring-modu} &
+\url{https://tronic.lk/product/water-level-sensor-float-switch-right-angle} \\
+\hline
+
+\end{tabularx}
+\caption{Comparison of Chemical Tank Monitoring Methods}
+\end{table}
+
+The load cell sensor was selected because it allows external monitoring of the chemical tank and helps detect abnormal chemical loss without placing sensors inside the tank.
+
+\section{Flow Sensor Comparison}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{3cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Feature} & \textbf{Hall-Effect Flow Sensor} & \textbf{Turbine Flow Sensor} & \textbf{Electromagnetic Flow Sensor} \\
+\hline
+
+Measurement Method &
+Pulse-based magnetic sensing &
+Rotating turbine measurement &
+Electromagnetic induction \\
+\hline
+
+Ease of Integration with ESP32 &
+Easy &
+Moderate &
+Complex \\
+\hline
+
+Real-Time Flow Monitoring &
+Yes &
+Yes &
+Yes \\
+\hline
+
+Accuracy &
+Moderate &
+High &
+Very high \\
+\hline
+
+Maintenance Requirement &
+Low &
+Moderate &
+Low \\
+\hline
+
+Cost &
+Low &
+Moderate &
+High \\
+\hline
+
+Small System Suitability &
+Highly suitable &
+Suitable &
+Less suitable \\
+\hline
+
+Power Consumption &
+Low &
+Moderate &
+High \\
+\hline
+
+Approximate Market Price (2026) &
+RS. 640 -- 1,500 &
+RS. 3,000 -- 10,000 &
+RS. 20,000 -- 80,000 \\
+\hline
+
+Suitability for This Project &
+Highly suitable &
+Moderately suitable &
+Overpowered \\
+\hline
+
+Product Link &
+\url{https://tronic.lk/product/yf-s201-water-flow-sensor-1-30lmin-1-75mpa-0-5inch} &
+\url{https://lk-tronics.com/product/yf-b10-hall-effect-flow-sensor-water-1-50l-min-turbine-flowmeter/} &
+\url{https://fieldinstruments.lk/products/honeywell-smartline-versaflow-mag-4000-electromagnetic-flow-sensor-4805} \\
+\hline
+
+\end{tabularx}
+\caption{Comparison of Flow Sensors}
+\end{table}
+
+The Hall-Effect flow sensor was selected because it provides real-time flow measurement, easy ESP32 interfacing, and low implementation cost.
+
+\section{Dispensing Tank Level Sensor Comparison}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{3cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Feature} & \textbf{Capacitive Sensor} & \textbf{Float Sensor} & \textbf{Optical Sensor} \\
+\hline
+
+Detection Method &
+Capacitance-based sensing &
+Mechanical float detection &
+Optical liquid detection \\
+\hline
+
+Suitable for Small Tanks &
+Highly suitable &
+Moderately suitable &
+Suitable \\
+\hline
+
+Sensor Contact with Liquid &
+Minimal / external &
+Yes &
+Yes \\
+\hline
+
+Maintenance Requirement &
+Low &
+Moderate &
+Low \\
+\hline
+
+Ease of Installation &
+Easy &
+Moderate &
+Moderate \\
+\hline
+
+Reliability &
+Good &
+Moderate &
+Good \\
+\hline
+
+Compact Size &
+Yes &
+Limited &
+Yes \\
+\hline
+
+Approximate Market Price (2026) &
+RS. 1,800 -- 4,000 &
+RS. 400 -- 2,000 &
+RS. 2,000 -- 3,000 \\
+\hline
+
+Suitability for This Project &
+Highly suitable &
+Moderately suitable &
+Suitable \\
+\hline
+
+Product Link &
+\url{https://tronic.lk/product/non-contact-tank-liquid-water-level-sensor-12-24v} &
+\url{https://tronic.lk/product/water-level-sensor-float-switch-right-angle} &
+\url{https://lk-tronics.com/product/optical-infrared-water-liquid-level-sensor-with-module/} \\
+\hline
+
+\end{tabularx}
+\caption{Comparison of Dispensing Tank Level Sensors}
+\end{table}
+
+The capacitive sensor was selected because it is compact, reliable, and suitable for small dispensing tanks with low maintenance requirements.
+
+\section{Pump Comparison}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{3cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Feature} & \textbf{Peristaltic Pump} & \textbf{Diaphragm Pump} & \textbf{Submersible Pump} \\
+\hline
+
+Pumping Method &
+Tube compression &
+Diaphragm pressure &
+Impeller-based pumping \\
+\hline
+
+Chemical Contact with Pump &
+No direct contact &
+Direct contact &
+Direct contact \\
+\hline
+
+Dispensing Accuracy &
+High &
+Moderate &
+Low \\
+\hline
+
+Speed Control &
+Easy &
+Moderate &
+Limited \\
+\hline
+
+Suitability for Chemical Dispensing &
+Highly suitable &
+Suitable &
+Limited \\
+\hline
+
+Maintenance Requirement &
+Low &
+Moderate &
+Moderate \\
+\hline
+
+Contamination Risk &
+Low &
+Moderate &
+High \\
+\hline
+
+Ease of Integration &
+Easy &
+Moderate &
+Easy \\
+\hline
+
+Approximate Market Price (2026) &
+RS. 2,000 -- 5,000 &
+RS. 3,500 -- 8,000 &
+RS. 250 -- 2,000 \\
+\hline
+
+Suitability for This Project &
+Highly suitable &
+Moderately suitable &
+Limited \\
+\hline
+
+Product Link &
+\url{https://www.daraz.lk/tag/12v-peristaltic-pump/} &
+\url{https://tronic.lk/product/diaphragm-water-pump-12v-7lmin-hy-5200} &
+\url{https://lk-tronics.com/product-tag/water-pump/} \\
+\hline
+
+\end{tabularx}
+\caption{Comparison of Pump Types}
+\end{table}
+
+The peristaltic pump was selected because it provides accurate dispensing, low contamination risk, and supports controlled chemical flow.
+
+\section{Valve Comparison}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{3cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Feature} & \textbf{Solenoid Valve} & \textbf{Motorized Ball Valve} & \textbf{Pinch Valve} \\
+\hline
+
+Operating Method &
+Electromagnetic control &
+Motor-driven rotation &
+Tube compression \\
+\hline
+
+Response Speed &
+Fast &
+Moderate &
+Fast \\
+\hline
+
+ESP32 Control &
+Easy &
+Moderate &
+Moderate \\
+\hline
+
+Leakage Protection &
+Good &
+Excellent &
+Excellent \\
+\hline
+
+Power Consumption &
+Moderate &
+Low &
+Moderate \\
+\hline
+
+Maintenance Requirement &
+Low &
+Moderate &
+Low \\
+\hline
+
+Suitability for Chemical Systems &
+Suitable &
+Highly suitable &
+Suitable \\
+\hline
+
+Power Failure Safety &
+Yes &
+Depends on design &
+Yes \\
+\hline
+
+Approximate Market Price (2026) &
+RS. 800 -- 16,000 &
+RS. 15,000 -- 30,000 &
+RS. 10,000 -- 25,000 \\
+\hline
+
+Suitability for This Project &
+Highly suitable &
+Moderately suitable &
+Overpowered \\
+\hline
+
+Product Link &
+\url{https://tronic.lk/product/electric-solenoid-valve-12-12vdc-nc-plastic-water} &
+\url{https://lk-tronics.com/product/24v-dc-2-way-motorized-ball-valve/} &
+\url{https://www.daraz.lk/products/pinch-valve-industrial-i318742219.html} \\
+\hline
+
+\end{tabularx}
+\caption{Comparison of Valve Types}
+\end{table}
+
+The normally closed solenoid valve was selected because it provides fast automatic flow control, easy ESP32 interfacing, and automatic shutoff during power failure.
+
 
 \chapter{Failure Identification, Detection, and Fail-Safe Methods}
 
@@ -140,19 +821,29 @@ Leakage & Flow mismatch & Shutdown \\
 \section{Sensor-Based and Computational Failure Detection}
 \noindent\textit{Placeholder. List potential failures, detection method(s), and fail-safe actions.}
 
+
+
 \chapter{Data Collection and Communication to Central Controller}
 \noindent\textit{Placeholder. Evaluate at least two communication methods suitable for the distance/distribution.}
+
+
 
 \chapter{Complete System Schematic Block Diagram}
 \noindent\textit{Placeholder. Insert the complete schematic block diagram of all system components.}
 
+
+
 \chapter{Controller and Sensor Connection Schematic}
 \noindent\textit{Placeholder. Insert a schematic of the controller and connected sensors.}
+
+
 
 \chapter{Operational State Diagram / Flow Chart for IoT Components}
 \noindent\textit{Placeholder. Insert the algorithm flow chart / state diagram per IoT component.}
 
-\chapter{Simulation Implementation (TinkerCad/WokWi) and Source Code Attachment}
+
+
+\chapter{Simulation Implementation and Source Code Attachment}
 
 \section{Simulation}
 The system was simulated using WokWi with:
