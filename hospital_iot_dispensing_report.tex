@@ -21,15 +21,15 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\rhead{CS3243 Project Report}
-\lhead{IoT Devices and Applications}
+\rhead{System Design Report}
+\lhead{CS3243 IoT Devices and Applications}
 \cfoot{\thepage}
 \setlength{\headheight}{14.5pt}
 
 \fancypagestyle{plain}{
     \fancyhf{}
-    \rhead{CS3243 Project Report}
-    \lhead{IoT Devices and Applications}
+    \rhead{System Design Report}
+    \lhead{CS3243 IoT Devices and Applications}
     \cfoot{\thepage}
 }
 
@@ -221,7 +221,7 @@ Despite these limitations, the proposed system successfully demonstrates the cor
     \item Normally Closed Solenoid Valve for Flow Control
     \item Piezo Buzzer for Alarm Indication
     \item LED Indicators for System Status Display
-    \item Relay / MOSFET Driver Module for Pump and Valve Control
+    \item MOSFET Driver Module for Pump and Valve Control
     \item WiFi Communication using ESP32 Built-in Module
 
 \end{itemize}
@@ -256,7 +256,7 @@ Piezo Buzzer & 1 & 150 & 150 \\
 \hline
 LED Indicators (with Resistors) & 4 & 30 & 120 \\
 \hline
-Relay / MOSFET Driver Module & 1 & 350 & 350 \\
+MOSFET Driver Module & 1 & 350 & 350 \\
 \hline
 12V DC Power Supply Adapter & 1 & 1800 & 1800 \\
 \hline
@@ -845,49 +845,252 @@ Product Link &
 The normally closed solenoid valve was selected because it provides fast automatic flow control, easy ESP32 interfacing, and automatic shutoff during power failure.
 
 
-\chapter{Failure Identification, Detection, and Fail-Safe Methods}
+\chapter[Failure Detection and Fail-Safe Mechanisms]{Failure Detection and Fail-Safe\\Mechanisms}
 
-\section{Fault Detection}
+% \section{Fault Detection}
+% \begin{table}[H]
+% \centering
+% \begin{tabular}{lll}
+% \toprule
+% Failure & Detection & Action \\
+% \midrule
+% Pump Failure & No flow pulses & Alarm \\
+% Blocked Valve & No flow & Stop refill \\
+% Leakage & Flow mismatch & Shutdown \\
+% \bottomrule
+% \end{tabular}
+% \caption{Fault Detection Mechanisms}
+% \end{table}
+
+% \section{Sensor-Based and Computational Failure Detection}
+% \noindent\textit{Placeholder. List potential failures, detection method(s), and fail-safe actions.}
+
+\section{Monitoring and Detection Methods}
+
+The proposed automated chemical dispensing system uses both sensor-based and computational methods for monitoring system operation and detecting abnormal conditions.
+
+\subsection{Sensor-Based Monitoring Methods}
+
+\begin{itemize}
+
+    \item Ultrasonic sensor for purified water tank level monitoring
+
+    \item Capacitive sensor for dispensing tank low-level detection
+
+    \item Hall-effect flow sensor for measuring liquid flow rate and dispensed volume
+
+    \item Load cell sensor for monitoring concentrated chemical quantity
+
+\end{itemize}
+
+\subsection{Computational and Algorithmic Methods}
+
+\begin{itemize}
+
+    \item Remaining chemical estimation using cumulative flow measurements
+
+    \item Detection of abnormal flow conditions using flow pulse monitoring
+
+    \item Refill timeout monitoring for detecting pump or valve failures
+
+    \item Leakage detection by comparing expected and measured chemical reduction
+
+    \item Sequential refill scheduling algorithm for managing multiple dispensing tanks
+
+\end{itemize}
+
+\section{Potential Failures and Detection Methods}
+
 \begin{table}[H]
 \centering
-\begin{tabular}{lll}
-\toprule
-Failure & Detection & Action \\
-\midrule
-Pump Failure & No flow pulses & Alarm \\
-Blocked Valve & No flow & Stop refill \\
-Leakage & Flow mismatch & Shutdown \\
-\bottomrule
-\end{tabular}
-\caption{Fault Detection Mechanisms}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{|p{3.5cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Potential Failure} & \textbf{Detection Method} & \textbf{Fail-Safe Method} \\
+\hline
+
+Empty Water Tank &
+Ultrasonic sensor detects low water level &
+Stop refill operation and generate alarm \\
+\hline
+
+Empty Chemical Tank &
+Load cell detects low remaining weight &
+Stop pump operation and notify operator \\
+\hline
+
+Pump Failure &
+No flow pulses detected during refill &
+Stop system and activate alarm \\
+\hline
+
+Blocked Valve or Pipeline &
+Low or no flow detected by flow sensor &
+Close valve and stop pump \\
+\hline
+
+Pipeline Leakage &
+Mismatch between expected and measured chemical quantity &
+Stop dispensing and generate warning \\
+\hline
+
+Sensor Failure &
+Invalid or unstable sensor readings &
+Switch system to safe shutdown mode \\
+\hline
+
+Overflow Condition &
+Refill operation exceeds expected refill time &
+Automatically stop refill process \\
+\hline
+
+Communication Failure &
+No response from sensor modules or controller &
+Generate maintenance warning and stop automatic operation \\
+\hline
+
+Power Failure &
+Loss of power supply detected &
+Normally closed valve automatically stops liquid flow \\
+\hline
+
+\end{tabularx}
+\caption{Potential Failures, Detection Methods, and Fail-Safe Mechanisms}
 \end{table}
 
-\section{Sensor-Based and Computational Failure Detection}
-\noindent\textit{Placeholder. List potential failures, detection method(s), and fail-safe actions.}
+\section{Fail-Safe Strategy}
+
+The system is designed with multiple fail-safe mechanisms to reduce operational risks in hospital environments. Automatic shutdown procedures are used during abnormal conditions such as empty tanks, pump failures, leakage detection, or communication failures. Audible alarms and warning notifications are also generated to alert maintenance personnel.
+
+Normally closed solenoid valves are used to automatically stop liquid flow during power failures, reducing the risk of leakage or uncontrolled dispensing. The use of both sensor-based monitoring and computational estimation improves overall system reliability and fault detection capability.
 
 
 
-\chapter{Data Collection and Communication to Central Controller}
-\noindent\textit{Placeholder. Evaluate at least two communication methods suitable for the distance/distribution.}
+
+\chapter[Data Collection and Communication System]{Data Collection and\\Communication System}
+
+\section{Data Collection from Dispensing Tanks}
+
+The dispensing tanks are distributed throughout different locations in the hospital. Each dispensing tank contains sensors for monitoring liquid levels and refill requests. The sensor data from these tanks must be transmitted to a central controller for monitoring, refill management, alarm handling, and report generation.
+
+Each dispensing tank can use a local ESP32 controller to collect sensor data such as:
+
+\begin{itemize}
+
+    \item Dispensing tank level status
+
+    \item Refill requests
+
+    \item Flow sensor readings
+
+    \item Fault conditions
+
+    \item System status information
+
+\end{itemize}
+
+The collected data is then communicated to a central controller or monitoring server through a wireless communication network.
+
+\section{Communication Method Comparison}
+
+Two communication methods considered for this project were WiFi and ZigBee. These methods were compared based on communication range, power consumption, implementation complexity, scalability, and suitability for hospital environments.
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{4cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Feature} & \textbf{WiFi} & \textbf{ZigBee} \\
+\hline
+
+Communication Range &
+Moderate &
+Moderate to High \\
+\hline
+
+Power Consumption &
+High &
+Low \\
+\hline
+
+Data Transmission Speed &
+High &
+Low \\
+\hline
+
+Ease of Implementation &
+Easy &
+Moderate \\
+\hline
+
+Built-in ESP32 Support &
+Yes &
+No \\
+\hline
+
+Network Scalability &
+Moderate &
+High \\
+\hline
+
+Mesh Networking Support &
+Limited &
+Yes \\
+\hline
+
+Internet Connectivity &
+Direct &
+Requires gateway \\
+\hline
+
+Approximate Hardware Cost &
+Low &
+Moderate \\
+\hline
+
+Suitability for This Project &
+Highly suitable &
+Moderately suitable \\
+\hline
+
+Hardware Module Link &
+Available in ESP32 &
+\url{https://tronic.lk/product/xbee-zigbee-s2c} \\
+\hline
+
+\end{tabularx}
+\caption{Comparison of WiFi and ZigBee Communication Methods}
+\end{table}
+
+\section{Selected Communication Method}
+
+WiFi communication was selected for this project because it is directly supported by the ESP32 controller and allows simple implementation without requiring additional communication modules. It also supports real-time monitoring, remote data collection, and easy integration with IoT dashboards and cloud platforms.
+
+Although ZigBee provides lower power consumption and better mesh networking capability, it requires additional hardware modules and increases implementation complexity. Since the proposed system operates inside a hospital building with existing WiFi infrastructure, WiFi communication is suitable for the prototype implementation.
 
 
 
-\chapter{Complete System Schematic Block Diagram}
+
+\chapter[Complete System Schematic Block Diagram]{Complete System\\Schematic Block Diagram}
 \noindent\textit{Placeholder. Insert the complete schematic block diagram of all system components.}
 
 
 
-\chapter{Controller and Sensor Connection Schematic}
+\chapter[Controller and Sensor Connection Schematic]{Controller and Sensor Connection\\Schematic}
 \noindent\textit{Placeholder. Insert a schematic of the controller and connected sensors.}
 
 
 
-\chapter{Operational State Diagram / Flow Chart for IoT Components}
+\chapter[Operational State Diagram / Flow Chart for IoT Components]{Operational State Diagram /\\Flow Chart for IoT Components}
 \noindent\textit{Placeholder. Insert the algorithm flow chart / state diagram per IoT component.}
 
 
 
-\chapter{Simulation Implementation and Source Code Attachment}
+\chapter[Simulation Implementation and Source Code Attachment]{Simulation Implementation and\\Source Code Attachment}
 
 \section{Simulation}
 The system was simulated using WokWi with:
@@ -907,6 +1110,9 @@ An IoT-based automated hospital chemical dispensing system was successfully desi
 
 \begin{thebibliography}{9}
 \addcontentsline{toc}{chapter}{References}
+
+\bibitem{placeholder}
+\textit{Placeholder. Add references for datasheets, hardware modules, and tools used.}
 
 % \bibitem{book1}
 % Adrian McEwen and Hakim Cassimally,
