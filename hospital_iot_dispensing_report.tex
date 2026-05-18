@@ -232,16 +232,16 @@ The system contains two separate liquid systems:
     \item Diluted chemical dispensing tanks
 \end{itemize}
 
-\noindent Each dispensing tank uses a capacitive sensor to detect low-level conditions and generate refill requests to the ESP32 controller.
+\noindent Capacitive level sensors are installed on the dispensing tanks to detect low-level refill conditions and generate refill requests to the ESP32 controller.
 
 \noindent The concentrated chemical tank uses two monitoring methods:
 
 \begin{itemize}
-    \item Hall-effect flow sensor
+    \item YF-S201 flow sensor (hall-effect)
     \item Load cell weight sensor
 \end{itemize}
 
-The flow sensor continuously measures the amount of concentrated chemical dispensed into the mixing chamber. The ESP32 controller maintains a cumulative record of the total dispensed chemical volume.
+The YF-S201 flow sensor continuously measures the amount of concentrated chemical dispensed into the mixing chamber. The ESP32 controller maintains a cumulative record of the total dispensed chemical volume.
 
 \noindent The remaining chemical quantity can be estimated using:
 
@@ -314,7 +314,7 @@ The refill operation stops automatically once the required target volume has bee
     \item ESP32 DevKit V1 Microcontroller
     \item Ultrasonic Sensor for Water Tank Level Measurement
     \item Load Cell with HX711 Module for Concentrated Chemical Tank Monitoring
-    \item Hall-Effect Flow Sensor for Flow Measurement
+    \item YF-S201 Flow Sensor for Flow Measurement
     \item Capacitive Sensor for Dispensing Tank Level Detection
     \item Peristaltic Pump for Chemical Dispensing
     \item SS316 Mixing Chamber Tank (10L)
@@ -386,7 +386,7 @@ Wires, Connectors, Tubing (Estimated) & 1 & 1000 & 1000 \\
 \renewcommand{\arraystretch}{1.15}
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|c|>{\raggedleft\arraybackslash}p{3cm}|>{\raggedleft\arraybackslash}p{3cm}|}
 \hline
-\textbf{Component} & \textbf{Qty} & \textbf{Unit Cost (Rs.)} & \textbf{Price (Rs.)} \\
+Servo PWM (valve) & D4 & Valve actuator in simulation (real system uses a normally-closed solenoid valve) \\
 \hline
 
 Capacitive Sensor (Dispensing Tank Level) & 1 & 1300 & 1300 \\
@@ -1120,14 +1120,13 @@ The proposed automated chemical dispensing system uses both sensor-based and com
 \subsection{Sensor-Based Monitoring Methods}
 
 \begin{itemize}
-
     \item Ultrasonic sensor for purified water tank level monitoring
 
-    \item Capacitive sensor for dispensing tank low-level detection
+    \item Capacitive level sensors are installed on the dispensing tanks to detect low-level refill conditions
 
-    \item Hall-effect flow sensor for measuring liquid flow rate and dispensed volume
+    \item YF-S201 flow sensor for measuring liquid flow rate and dispensed volume
 
-    \item Load cell sensor for monitoring concentrated chemical quantity
+    \item Load cell sensor with HX711 module for monitoring concentrated chemical quantity
 
 \end{itemize}
 
@@ -1233,7 +1232,7 @@ Normally closed solenoid valves are used to automatically stop liquid flow durin
 
 \section{Data Collection from Dispensing Tanks}
 
-The dispensing tanks are distributed across different areas of the hospital and require continuous monitoring for refill management and fault detection. Each dispensing tank contains a capacitive level sensor used to detect low-level conditions and generate refill requests.
+The dispensing tanks are distributed across different areas of the hospital and require continuous monitoring for refill management and fault detection. Capacitive level sensors are installed on the dispensing tanks to detect low-level refill conditions and generate refill requests.
 
 Sensor data collected from the dispensing tanks includes:
 
@@ -1248,7 +1247,13 @@ The sensor data is collected by ESP32-based controller nodes located near the di
 
 The collected data is transmitted to the central controller through a wireless communication network. The central ESP32 controller processes the received sensor data and manages refill scheduling, alarm generation, safety validation, and system monitoring operations.
 
-For remote monitoring and IoT functionality, the central ESP32 controller also transmits system information to a cloud dashboard using MQTT communication over the hospital WiFi network. Hospital operators can access monitoring information remotely through a mobile or web application using HTTPS communication.
+For remote monitoring and IoT functionality, the central ESP32 controller transmits system telemetry to a cloud dashboard using MQTT over the hospital WiFi network. Hospital operators access monitoring information from the cloud dashboard using HTTPS from a mobile or web application. The communication chain is:
+
+\begin{center}
+ESP32 Controller $\to$ WiFi $\to$ MQTT Broker $\to$ Cloud Dashboard $\to$ HTTPS Mobile/Web Application
+\end{center}
+
+The ESP32 controller performs local control functions including refill control, safety logic, alarm handling, and sensor monitoring. The cloud platform is used only for monitoring, logging, alert forwarding, and remote access — it does not perform the real-time control of refill operations.
 
 This architecture supports:
 
@@ -1334,7 +1339,14 @@ Dispensing Tank Sensors → ESP32 Controller → WiFi Network → MQTT Broker �
 HTTPS communication is used between the cloud platform and the mobile monitoring application to provide secure remote access for hospital operators and maintenance personnel.
 
 WiFi with MQTT was selected because the proposed system operates inside a hospital building with existing WiFi infrastructure and requires real-time cloud monitoring capability.
-
+\vspace{6pt}
+\noindent\textbf{How dispensing tank data is collected and communicated:}
+\begin{itemize}
+    \item Each dispensing tank is monitored by a local ESP32 node or a sensor wired to a nearby ESP32 placed within hospital WiFi coverage.
+    \item The local ESP32 node reads the capacitive level sensors, performs local safety checks, and publishes telemetry to an MQTT broker over WiFi.
+    \item The cloud dashboard subscribes to MQTT topics to aggregate telemetry. Mobile and web applications access aggregated data from the cloud over HTTPS.
+    \item For wide-area deployments, additional WiFi access points or local gateways should be used to ensure reliable connectivity. ZigBee with gateways can be considered for very large, low-power networks.
+\end{itemize}
 
 
 
@@ -1367,7 +1379,7 @@ WiFi with MQTT was selected because the proposed system operates inside a hospit
 Ultrasonic TRIG & D5 & Trigger pulse for distance measurement \\
 Ultrasonic ECHO & D18 & Echo input (distance) \\
 OLED (SDA / SCL) & D21 / D22 & I2C display (0x3C) \\
-Servo PWM (valve) & D4 & Valve actuation (servo) \\
+Servo PWM (valve) & D4 & Valve actuator in simulation (real system uses a normally-closed solenoid valve) \\
 RGB LED (R/G/B) & D14 / D27 / D33 & System status indicators \\
 Buzzer & D25 & Audible alarm/notification \\
 Push-button: Tank request & D13 & Manual refill request (active-low) \\
@@ -1404,13 +1416,21 @@ The WokWi simulation uses an ESP32 DevKit V1 and the peripheral modules listed b
     \item ESP32 DevKit V1 (main controller)
     \item HC-SR04 ultrasonic distance sensor (tank level)
     \item SSD1306 OLED display (I2C, address 0x3C)
-    \item SG90-style servo (used as the solenoid valve actuator)
+    \item SG90-style servo (used only in Wokwi to emulate solenoid valve actuation; the real system uses a normally-closed solenoid valve)
     \item RGB LED (with series resistors on R/G/B lines)
     \item Piezo buzzer
     \item Three push-buttons to emulate: tank request, flow pulse, chemical present
     \item Breadboard for power and common ground wiring
 \end{itemize}
-
+\vspace{4pt}
+\noindent\textbf{Simulation notes:}
+\begin{itemize}
+    \item The real system uses a normally-closed solenoid valve for flow control; a small servo is used in Wokwi only because Wokwi does not simulate solenoid valve hardware directly.
+    \item Chemical availability in the simulation is represented by a push-button input. In the real system chemical level is measured by a load cell with an HX711 module.
+    \item Flow pulse generation in the simulation is emulated using a push-button to trigger pulses; in the real system the YF-S201 flow sensor produces pulse signals proportional to flow.
+    \item The Wokwi simulation demonstrates refill and monitoring logic for a single dispensing tank. The proposed architecture supports multiple dispensing tanks in the field.
+    \item The simulation validates control logic and monitoring behavior only; it does not model actual fluid dynamics or chemical mixing physics.
+\end{itemize}
 \section{Source Code}
 
 \lstinputlisting[style=arduinoStyle,language=C++,label={lst:sketch},caption={ESP32 sketch for WokWi simulation}]{simulation/simulation.ino}
@@ -1450,6 +1470,9 @@ YouTube, ``Zigbee Overview,'' 2024. [Online]. Available: \url{https://youtu.be/l
 
 \bibitem{wikipedia-lora}
 Wikipedia, \textit{LoRa}. [Online]. Available: \url{https://en.wikipedia.org/wiki/LoRa}
+
+\bibitem{chatgpt}
+OpenAI, "ChatGPT". [Online]. Available: \url{https://chat.openai.com/}.
 
 \end{thebibliography}
 
