@@ -93,13 +93,15 @@ The proposed system consists of:
 
 \subsection{Water Tank Measurement}
 
-A non-contact ultrasonic sensor was selected for measuring the purified water tank level because the hospital requested that no sensing device should be installed inside the tank due to periodic cleaning and maintenance operations.
+A waterproof ultrasonic sensor was selected for measuring the purified water tank level because the hospital requested that no sensing device should be installed inside the tank due to periodic cleaning and maintenance operations.
 
 The ultrasonic sensor is mounted at the top of the tank and measures the distance between the sensor and the water surface. Since the sensor measures the empty space above the water, the actual water level can be determined by subtracting the measured distance from the effective internal height of the tank.
 
 To improve measurement accuracy, the thickness of the tank lid and the wall thickness of the cylindrical tank are considered during calibration. The internal dimensions of the tank are used instead of external dimensions when calculating the actual water capacity.
 
-Let:
+The tank dimensions, wall thickness, lid thickness, and chemical density values are pre-determined during system installation and calibration. These calibrated parameters are stored in the ESP32 controller and are used in subsequent level and volume calculations during system operation.
+
+\noindent Let:
 
 \begin{itemize}
     \item $LT$ = Lid thickness
@@ -109,86 +111,125 @@ Let:
     \item $d$ = Measured distance from ultrasonic sensor to water surface
 \end{itemize}
 
-The effective internal tank dimensions are calculated as:
+The effective internal tank height is calculated as:
 
 \begin{equation}
 H_{int} = H_{ext} - LT - WT
 \end{equation}
 
+The effective internal tank radius is:
+
 \begin{equation}
 r_{int} = \frac{D_{ext}}{2} - WT
 \end{equation}
 
-The total internal tank volume is therefore:
+The total internal tank volume is:
 
 \begin{equation}
 V_{tank} = \pi r_{int}^{2} H_{int}
 \end{equation}
 
-The water level inside the tank is calculated as:
+The current water level inside the tank is calculated using:
 
 \begin{equation}
 Water\ Level = H_{int} - d
 \end{equation}
 
-The remaining water volume can then be estimated using:
+The remaining water volume is estimated as:
 
 \begin{equation}
 V_{water} = \pi r_{int}^{2} (Water\ Level)
 \end{equation}
 
-The use of ultrasonic sensing provides several advantages:
+This method provides:
 
 \begin{itemize}
     \item Non-contact operation
     \item Hygienic measurement
-    \item Reduced maintenance
+    \item Low maintenance
     \item Protection against sensor damage during tank cleaning
 \end{itemize}
 
 \subsection{Chemical Estimation and Dispensing Control}
 
-The system uses two separate liquid systems:
+The system contains two separate liquid systems:
 
 \begin{itemize}
     \item Concentrated chemical storage tank
     \item Diluted chemical dispensing tanks
 \end{itemize}
 
-According to the project constraints, only a low-level sensor can be installed in each dispensing tank. Therefore, a simple float-type low-level switch is used to detect when the dispensing tank requires refilling.
+\noindent Each dispensing tank uses a capacitive sensor to detect low-level conditions and generate refill requests to the ESP32 controller.
 
-The concentrated chemical tank does not allow internal level sensors. Therefore, the remaining chemical quantity is estimated using a hybrid computational and external sensing approach.
+\noindent The concentrated chemical tank uses two monitoring methods:
 
-Initially, the total volume of concentrated chemical inside the tank is known. During operation, the flow meter continuously measures the amount of chemical dispensed into the mixing chamber. The controller maintains a cumulative record of the total dispensed chemical volume.
+\begin{itemize}
+    \item Hall-effect flow sensor
+    \item Load cell weight sensor
+\end{itemize}
 
-The remaining chemical quantity is estimated using:
+The flow sensor continuously measures the amount of concentrated chemical dispensed into the mixing chamber. The ESP32 controller maintains a cumulative record of the total dispensed chemical volume.
+
+\noindent The remaining chemical quantity can be estimated using:
 
 \begin{equation}
 Remaining\ Chemical = Initial\ Volume - \sum Dispensed\ Volume
 \end{equation}
 
-To improve reliability and detect abnormalities such as leakage, an external load cell (weight sensor) can additionally be installed beneath the concentrated chemical container. The measured weight reduction can then be compared against the expected dispensed volume obtained from the flow meter.
+A load cell placed beneath the concentrated chemical tank continuously measures the tank weight. The measured weight reduction is compared against the expected dispensed chemical amount obtained from the flow sensor.
 
-This dual-verification method improves system reliability by enabling:
+\noindent The relationship between weight and volume is:
+
+\begin{equation}
+Mass = Density \times Volume
+\end{equation}
+
+The density of the concentrated chemical is assumed to be known beforehand based on manufacturer specifications or laboratory measurements and is stored in the controller during system calibration.
+
+Therefore:
+
+\begin{equation}
+Volume = \frac{Mass}{Density}
+\end{equation}
+
+This allows the system to estimate the remaining chemical quantity using both flow-based calculation and weight-based verification.
+
+\noindent The difference between expected and measured chemical reduction can be calculated as:
+
+\begin{equation}
+Error = |Expected\ Reduction - Measured\ Reduction|
+\end{equation}
+
+If the error exceeds a predefined threshold, the system assumes abnormal operation such as:
 
 \begin{itemize}
-    \item Leakage detection
-    \item Flow meter fault detection
-    \item Dry tank detection
-    \item Abnormal dispensing detection
+    \item Pipeline leakage
+    \item Pump malfunction
+    \item Flow sensor failure
+    \item Unexpected chemical loss
 \end{itemize}
 
-The dispensing process is controlled using a PWM-controlled peristaltic pump together with a flow meter. Although PWM adjusts the pump speed, it does not guarantee accurate liquid flow due to variations in pressure, viscosity, tubing resistance, and pump wear. Therefore, actual flow measurement using a flow sensor is essential for accurate dispensing control.
+The dispensing process is controlled using a PWM-controlled peristaltic pump together with a flow sensor. Although PWM adjusts the pump speed, it does not guarantee accurate liquid flow due to pressure variations, tubing resistance, viscosity changes, and pump wear.
+Therefore, actual flow measurement is required for accurate dispensing control.
 
-The refill operation stops automatically once the required target volume has been measured by the flow meter.
-
-\section{Remaining Work}
-
-The current implementation demonstrates the operational logic of the automated dispensing system using a single dispensing tank in a simulation environment. Several practical and industrial considerations remain for full-scale deployment.
+The refill operation only begins after all safety conditions are validated by the ESP32 controller.
+The required pre-conditions are:
 
 \begin{itemize}
+    \item Sufficient water available
+    \item Sufficient concentrated chemical available
+    \item No leakage detected
+    \item No sensor faults detected
+    \item No overflow condition detected
+\end{itemize}
 
-    \item The current prototype uses simulated flow pulses instead of a real industrial flow sensor.
+This safety validation process acts as an interlock mechanism to prevent unsafe dispensing conditions.
+
+The refill operation stops automatically once the required target volume has been measured by the flow sensor.
+
+\chapter{Should be removed in final version: Remaining Work}
+
+\begin{itemize}
 
     \item Communication between multiple dispensing tanks and the central controller was not fully implemented in the simulation and can be extended using MQTT, WiFi, or ZigBee communication protocols.
 
@@ -201,10 +242,6 @@ The current implementation demonstrates the operational logic of the automated d
     \item Additional industrial safety mechanisms such as redundant sensors, emergency shutoff systems, and battery backup systems may be incorporated for higher reliability.
 
 \end{itemize}
-
-Despite these limitations, the proposed system successfully demonstrates the core concepts of IoT-based automated chemical dispensing, including sensing, control, fault detection, and automated refill management.
-
-
 
 \chapter{Component Selection}
 
