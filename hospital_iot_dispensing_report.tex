@@ -1413,12 +1413,16 @@ The WokWi simulation uses an ESP32 DevKit V1 and the peripheral modules listed b
 
 \section{Source Code}
 
-\lstinputlisting[style=arduinoStyle,language=C++,label={lst:sketch},caption={ESP32 sketch for WokWi simulation}]{simulation/sketch.ino}
+\lstinputlisting[style=arduinoStyle,language=C++,label={lst:sketch},caption={ESP32 sketch for WokWi simulation}]{simulation/simulation.ino}
 
 
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{Conclusion}
-An IoT-based automated hospital chemical dispensing system was successfully designed and simulated.
+An IoT-based automated hospital chemical dispensing system was designed and simulated. 
+It uses an ESP32 controller with ultrasonic, load cell, flow, and capacitive sensors, plus peristaltic and diaphragm pumps for accurate dosing and mixing.
+Multiple safety features detect leaks, overflows, and sensor faults.
+WiFi with MQTT enables real-time monitoring and alerts.
+The Wokwi simulation validated the core functions.
 
 \begin{thebibliography}{9}
 \addcontentsline{toc}{chapter}{References}
