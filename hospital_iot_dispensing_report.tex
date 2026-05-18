@@ -1331,12 +1331,29 @@ The complete block diagram should show the concentrated chemical tank connected 
 
 
 \chapter[Controller and Sensor Connection Schematic]{Controller and Sensor Connection\\Schematic}
-\noindent\textit{Placeholder. Insert a schematic of the controller and connected sensors.}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth,keepaspectratio]{schematic-diagram.png}
+\end{figure}
 
 
 
 \chapter[Operational State Diagram / Flow Chart for IoT Components]{Operational State Diagram /\\Flow Chart for IoT Components}
-\noindent\textit{Placeholder. Insert the algorithm flow chart / state diagram per IoT component.}
+\thispagestyle{empty}
+\begin{center}
+    \vspace*{\fill}
+    \includegraphics[width=\textwidth,height=0.94\textheight,keepaspectratio]{flow-chart-01.png}
+    \vspace*{\fill}
+\end{center}
+\clearpage
+\clearpage
+\clearpage
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=\textwidth,height=0.9\textheight,keepaspectratio]{flow-chart-02.png}
+\end{figure}
+\clearpage
+\clearpage
 
 The operational flow starts when a dispensing tank generates a low-level refill request. The ESP32 verifies water level, remaining chemical level, sensor status, and valve status. The peristaltic pump then doses the required concentrated chemical into the 10L SS316 mixing chamber while the flow sensor measures the dispensed volume. The agitator motor rotates the mixing blade to maintain continuous mixing until the solution reaches a uniform concentration. After mixing is completed, the diaphragm pump transfers the mixed solution through the common dispensing pipeline to the requested dispensing tank. The refill process stops when the target volume is reached or when a fault condition is detected.
 
