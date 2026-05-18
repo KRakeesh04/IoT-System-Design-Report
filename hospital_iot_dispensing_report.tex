@@ -1,5 +1,7 @@
 
 \documentclass[12pt,a4paper]{report}
+% Avoid inserting blank pages when chapters force a double-page clear
+\let\cleardoublepage\clearpage
 
 \usepackage[a4paper,margin=1in]{geometry}
 \usepackage{graphicx}
@@ -16,16 +18,43 @@
 \usepackage{fancyhdr}
 \usepackage{titlesec}
 
-% Code listing style for Arduino/ESP32 sketches
-\definecolor{codebg}{HTML}{F8F8F8}
-\definecolor{codegray}{gray}{0.45}
-\definecolor{codepurple}{HTML}{800080}
-\lstdefinestyle{arduinoStyle}{
+% Code listing styles for Arduino/ESP32 sketches
+\definecolor{codebg}{HTML}{0F1720}      % dark editor background
+\definecolor{codegutter}{HTML}{1B2430}  % gutter slightly lighter
+\definecolor{codegray}{HTML}{6A737D}
+\definecolor{codeblue}{HTML}{61AFEF}
+\definecolor{codegreen}{HTML}{98C379}
+\definecolor{codetext}{HTML}{D6DEEB}
+\definecolor{codeorange}{HTML}{D19A66}
+\lstdefinestyle{arduinoStyleDark}{
     backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\small\color{codetext},
+    keywordstyle=\color{codeblue}\bfseries,
+    commentstyle=\color{codegreen}\itshape,
+    stringstyle=\color{codeorange},
+    identifierstyle=\color{codetext},
+    numbers=left,
+    numberstyle=\scriptsize\color{codegray},
+    stepnumber=1,
+    numbersep=8pt,
+    xleftmargin=12pt,
+    frame=single,
+    rulecolor=\color{codegutter},
+    framesep=6pt,
+    captionpos=b,
+    showstringspaces=false,
+    tabsize=2,
+    breaklines=true,
+    breakatwhitespace=true,
+    morekeywords={IRAM_ATTR}
+}
+% Lightweight light style fallback (used previously)
+\lstdefinestyle{arduinoStyle}{
+    backgroundcolor=\color{white},
     basicstyle=\ttfamily\footnotesize,
     keywordstyle=\color{blue}\bfseries,
     commentstyle=\color{codegray}\itshape,
-    stringstyle=\color{codepurple},
+    stringstyle=\color{codeorange},
     numbers=left,
     numberstyle=\tiny\color{codegray},
     stepnumber=1,
@@ -1084,25 +1113,6 @@ The normally closed solenoid valve was selected because it provides fast automat
 
 
 \chapter[Failure Detection and Fail-Safe Mechanisms]{Failure Detection and Fail-Safe\\Mechanisms}
-
-% \section{Fault Detection}
-% \begin{table}[H]
-% \centering
-% \begin{tabular}{lll}
-% \toprule
-% Failure & Detection & Action \\
-% \midrule
-% Pump Failure & No flow pulses & Alarm \\
-% Blocked Valve & No flow & Stop refill \\
-% Leakage & Flow mismatch & Shutdown \\
-% \bottomrule
-% \end{tabular}
-% \caption{Fault Detection Mechanisms}
-% \end{table}
-
-% \section{Sensor-Based and Computational Failure Detection}
-% \noindent\textit{Placeholder. List potential failures, detection method(s), and fail-safe actions.}
-
 \section{Monitoring and Detection Methods}
 
 The proposed automated chemical dispensing system uses both sensor-based and computational methods for monitoring system operation and detecting abnormal conditions.
@@ -1302,11 +1312,6 @@ Low &
 Moderate \\
 \hline
 
-Suitability for This Project &
-Highly suitable &
-Moderately suitable \\
-\hline
-
 Hardware Module Link &
 Available in ESP32 &
 \url{https://tronic.lk/product/xbee-zigbee-s2c} \\
@@ -1322,6 +1327,8 @@ WiFi communication was selected for this project because it is directly supporte
 
 Although ZigBee provides lower power consumption and better mesh networking capability, it requires additional hardware modules and increases implementation complexity. Since the proposed system operates inside a hospital building with existing WiFi infrastructure, WiFi communication is suitable for the prototype implementation.
 
+\noindent If a hospital has limited or unreliable WiFi coverage, LoRa is a practical alternative for telemetry from distributed dispensing tanks. LoRa provides long range and very low power operation, making it suitable for infrequent sensor updates and battery-powered nodes, but it has low data rates and higher latency. These characteristics make LoRa appropriate for periodic monitoring and alarms, but not for low-latency control or high-frequency telemetry; it also requires a gateway for Internet connectivity and additional network planning\cite{wikipedia-lora}.
+
 
 
 
@@ -1330,13 +1337,10 @@ Although ZigBee provides lower power consumption and better mesh networking capa
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.95\textwidth]{block-diagram.png}
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{block-diagram.png}
     \caption{Complete system block diagram for the Hospital Automated Chemical Dosing System.}
     \label{fig:block_diagram}
 \end{figure}
-
-The complete block diagram should show the concentrated chemical tank connected to the peristaltic dosing pump and flow sensor before entering the 10L SS316 mixing chamber. The purified water tank also feeds the mixing chamber. A top-mounted DC agitator motor with a mixing blade is installed on the mixing chamber to provide continuous mixing before distribution. After mixing, the 12V DC diaphragm pump is placed after the mixing chamber and before the common dispensing pipeline. The common pipeline then branches to multiple dispensing tanks controlled using solenoid valves and monitored using capacitive level sensors.
-
 
 
 \chapter[Controller and Sensor Connection Schematic]{Controller and Sensor Connection\\Schematic}
@@ -1345,35 +1349,63 @@ The complete block diagram should show the concentrated chemical tank connected 
     \includegraphics[width=0.95\textwidth,keepaspectratio]{schematic-diagram.png}
 \end{figure}
 
+% Compact pin-summary table (placed under Chapter 6)
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{} l l l @{}}
+\toprule
+\textbf{Signal / Device} & \textbf{ESP32 Pin} & \textbf{Purpose} \\
+\midrule
+Ultrasonic TRIG & D5 & Trigger pulse for distance measurement \\
+Ultrasonic ECHO & D18 & Echo input (distance) \\
+OLED (SDA / SCL) & D21 / D22 & I2C display (0x3C) \\
+Servo PWM (valve) & D4 & Valve actuation (servo) \\
+RGB LED (R/G/B) & D14 / D27 / D33 & System status indicators \\
+Buzzer & D25 & Audible alarm/notification \\
+Push-button: Tank request & D13 & Manual refill request (active-low) \\
+Push-button: Flow pulse & D26 & Simulated flow pulses \\
+Push-button: Chemical OK & D12 & Chemical present confirmation \\
+Serial & TX0 / RX0 & Debug / serial monitor \\
+\bottomrule
+\end{tabular}
+\caption{Pin summary for the ESP32 controller and primary peripherals (visual reference).}
+\end{table}
 
 
-\chapter[Operational State Diagram / Flow Chart for IoT Components]{Operational State Diagram /\\Flow Chart for IoT Components}
-\begin{center}
-    \vspace*{\fill}
+\chapter[Operational Flow Chart for IoT Components]{Operational Flow Chart for IoT\\Components}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=\textwidth,height=0.90\textheight,keepaspectratio]{flow-chart-01.png}
-    \vspace*{\fill}
-\end{center}
-\clearpage
-\begin{figure}[p]
+    \caption*{}
+\end{figure}
+
+\begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth,height=0.95\textheight,keepaspectratio]{flow-chart-02.png}
+    \caption*{}
 \end{figure}
-\clearpage
 
 
-\chapter[Simulation Implementation and Source Code Attachment]{Simulation Implementation and\\Source Code Attachment}
+\chapter{Simulation of the Implementation}
 
 \section{Simulation}
-The system was simulated using WokWi with:
+The WokWi simulation uses an ESP32 DevKit V1 and the peripheral modules listed below.
+
+\noindent\textbf{Simulated parts:}
 \begin{itemize}
-    \item ESP32
-    \item Ultrasonic sensor
-    \item Flow pulse simulation
-    \item Alarm system
+    \item ESP32 DevKit V1 (main controller)
+    \item HC-SR04 ultrasonic distance sensor (tank level)
+    \item SSD1306 OLED display (I2C, address 0x3C)
+    \item SG90-style servo (used as the solenoid valve actuator)
+    \item RGB LED (with series resistors on R/G/B lines)
+    \item Piezo buzzer
+    \item Three push-buttons to emulate: tank request, flow pulse, chemical present
+    \item Breadboard for power and common ground wiring
 \end{itemize}
 
 \section{Source Code}
-The primary ESP32 sketch used for the WokWi simulation is included below with preserved code styling.
 
 \lstinputlisting[style=arduinoStyle,language=C++,label={lst:sketch},caption={ESP32 sketch for WokWi simulation}]{simulation/sketch.ino}
 
@@ -1385,16 +1417,29 @@ An IoT-based automated hospital chemical dispensing system was successfully desi
 \begin{thebibliography}{9}
 \addcontentsline{toc}{chapter}{References}
 
-\bibitem{placeholder}
-\textit{Placeholder. Add references for datasheets, hardware modules, and tools used.}
+\bibitem{wokwi}
+Wokwi, \textit{Online ESP32 Simulator and Firmware Builder}. [Online]. Available: \url{https://wokwi.com/}
 
-% \bibitem{book1}
-% Adrian McEwen and Hakim Cassimally,
-% \textit{Designing the Internet of Things}.
+\bibitem{wikipedia-esp32}
+Wikipedia, \textit{ESP32}. [Online]. Available: \url{https://en.wikipedia.org/wiki/ESP32}
 
-% \bibitem{esp32}
-% Espressif Systems,
-% ESP32 Technical Reference Manual.
+\bibitem{vseeds-esp32}
+Vseeds.lk, ``ESP32 DevKit V1 Development Board,'' 2025. [Online]. Available: \url{https://www.vseeds.lk/products/esp32-dev-kit-v1}
+
+\bibitem{tronic-ultrasonic}
+Tronic.lk, ``JSN-SR04T Waterproof Ultrasonic Distance Measuring Module,'' 2025. [Online]. Available: \url{https://tronic.lk/product/jsn-sr04t-waterproof-ultrasonic-distance-measuring-modu}
+
+\bibitem{tronic-oled}
+Tronic.lk, ``SSD1306 OLED Display Module,'' 2025. [Online]. Available: \url{https://tronic.lk/}
+
+\bibitem{daraz-rgb}
+Daraz.lk, ``RGB LED Module,'' 2025. [Online]. Available: \url{https://www.daraz.lk/}
+ 
+\bibitem{youtube-zigbee}
+YouTube, ``Zigbee Overview,'' 2024. [Online]. Available: \url{https://youtu.be/lVr88JS-2rM?si=Po6g7NyB4-zrrfi-}
+
+\bibitem{wikipedia-lora}
+Wikipedia, \textit{LoRa}. [Online]. Available: \url{https://en.wikipedia.org/wiki/LoRa}
 
 \end{thebibliography}
 
