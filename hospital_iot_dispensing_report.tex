@@ -1233,25 +1233,32 @@ Normally closed solenoid valves are used to automatically stop liquid flow durin
 
 \section{Data Collection from Dispensing Tanks}
 
-The dispensing tanks are distributed throughout different locations in the hospital. Each dispensing tank contains sensors for monitoring liquid levels and refill requests. The sensor data from these tanks must be transmitted to a central controller for monitoring, refill management, alarm handling, and report generation.
+The dispensing tanks are distributed across different areas of the hospital and require continuous monitoring for refill management and fault detection. Each dispensing tank contains a capacitive level sensor used to detect low-level conditions and generate refill requests.
 
-Each dispensing tank can use a local ESP32 controller to collect sensor data such as:
+Sensor data collected from the dispensing tanks includes:
 
 \begin{itemize}
-
-    \item Dispensing tank level status
-
-    \item Refill requests
-
-    \item Flow sensor readings
-
-    \item Fault conditions
-
-    \item System status information
-
+    \item Dispensing tank liquid level status
+    \item Refill request signals
+    \item Flow monitoring information
+    \item Fault and overflow conditions
 \end{itemize}
 
-The collected data is then communicated to a central controller or monitoring server through a wireless communication network.
+The sensor data is collected by ESP32-based controller nodes located near the dispensing tanks or connected directly to the central ESP32 controller depending on the installation distance and infrastructure layout.
+
+The collected data is transmitted to the central controller through a wireless communication network. The central ESP32 controller processes the received sensor data and manages refill scheduling, alarm generation, safety validation, and system monitoring operations.
+
+For remote monitoring and IoT functionality, the central ESP32 controller also transmits system information to a cloud dashboard using MQTT communication over the hospital WiFi network. Hospital operators can access monitoring information remotely through a mobile or web application using HTTPS communication.
+
+This architecture supports:
+
+\begin{itemize}
+    \item Distributed dispensing tank monitoring
+    \item Centralized refill management
+    \item Real-time alarm handling
+    \item Cloud-based monitoring and logging
+    \item Remote maintenance access
+\end{itemize}
 
 \section{Communication Method Comparison}
 
@@ -1267,54 +1274,34 @@ Two communication methods considered for this project were WiFi and ZigBee. Thes
 \textbf{Feature} & \textbf{WiFi} & \textbf{ZigBee} \\
 \hline
 
-Communication Range &
-Moderate &
-Moderate to High \\
+Communication Range & Moderate & Moderate to High \\
 \hline
 
-Power Consumption &
-High &
-Low \\
+Power Consumption & High & Low \\
 \hline
 
-Data Transmission Speed &
-High &
-Low \\
+Data Transmission Speed & High & Low \\
 \hline
 
-Ease of Implementation &
-Easy &
-Moderate \\
+Ease of Implementation & Easy & Moderate \\
 \hline
 
-Built-in ESP32 Support &
-Yes &
-No \\
+Built-in ESP32 Support & Yes & No \\
 \hline
 
-Network Scalability &
-Moderate &
-High \\
+Network Scalability & Moderate & High \\
 \hline
 
-Mesh Networking Support &
-Limited &
-Yes \\
+Mesh Networking Support & Limited & Yes \\
 \hline
 
-Internet Connectivity &
-Direct &
-Requires gateway \\
+Internet Connectivity & Direct & Requires gateway \\
 \hline
 
-Approximate Hardware Cost &
-Low &
-Moderate \\
+Approximate Hardware Cost & Low & Moderate \\
 \hline
 
-Hardware Module Link &
-Available in ESP32 &
-\url{https://tronic.lk/product/xbee-zigbee-s2c} \\
+Hardware Module Link & Available in ESP32 & \url{https://tronic.lk/product/xbee-zigbee-s2c} \\
 \hline
 
 \end{tabularx}
@@ -1323,11 +1310,30 @@ Available in ESP32 &
 
 \section{Selected Communication Method}
 
-WiFi communication was selected for this project because it is directly supported by the ESP32 controller and allows simple implementation without requiring additional communication modules. It also supports real-time monitoring, remote data collection, and easy integration with IoT dashboards and cloud platforms.
+WiFi communication was selected as the primary communication method for the proposed prototype because the ESP32 controller provides built-in WiFi capability without requiring additional communication modules.
 
-Although ZigBee provides lower power consumption and better mesh networking capability, it requires additional hardware modules and increases implementation complexity. Since the proposed system operates inside a hospital building with existing WiFi infrastructure, WiFi communication is suitable for the prototype implementation.
+WiFi supports direct communication between distributed dispensing tank controllers and the central controller through the hospital wireless network infrastructure. This allows real-time monitoring of dispensing tank levels, refill requests, flow conditions, and system alarms.
 
-\noindent If a hospital has limited or unreliable WiFi coverage, LoRa is a practical alternative for telemetry from distributed dispensing tanks. LoRa provides long range and very low power operation, making it suitable for infrequent sensor updates and battery-powered nodes, but it has low data rates and higher latency. These characteristics make LoRa appropriate for periodic monitoring and alarms, but not for low-latency control or high-frequency telemetry; it also requires a gateway for Internet connectivity and additional network planning\cite{wikipedia-lora}.
+Compared with ZigBee, WiFi provides:
+
+\begin{itemize}
+    \item Higher data transmission speed
+    \item Easier Internet connectivity
+    \item Simpler ESP32 integration
+    \item Lower implementation complexity for the prototype system
+\end{itemize}
+
+Although ZigBee provides lower power consumption and better mesh-network capability for large distributed systems, it requires additional hardware modules and more complex network configuration.
+
+For IoT monitoring functionality, MQTT protocol is used over the WiFi network to transmit system telemetry data between the ESP32 controller and the cloud dashboard. MQTT provides lightweight and reliable communication suitable for real-time IoT monitoring systems.
+
+The communication architecture of the proposed system is:
+
+Dispensing Tank Sensors → ESP32 Controller → WiFi Network → MQTT Broker → Cloud Dashboard → HTTPS Mobile/Web Application
+
+HTTPS communication is used between the cloud platform and the mobile monitoring application to provide secure remote access for hospital operators and maintenance personnel.
+
+WiFi with MQTT was selected because the proposed system operates inside a hospital building with existing WiFi infrastructure and requires real-time cloud monitoring capability.
 
 
 
