@@ -16,6 +16,30 @@
 \usepackage{fancyhdr}
 \usepackage{titlesec}
 
+% Code listing style for Arduino/ESP32 sketches
+\definecolor{codebg}{HTML}{F8F8F8}
+\definecolor{codegray}{gray}{0.45}
+\definecolor{codepurple}{HTML}{800080}
+\lstdefinestyle{arduinoStyle}{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{codegray}\itshape,
+    stringstyle=\color{codepurple},
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    stepnumber=1,
+    numbersep=8pt,
+    breaklines=true,
+    breakatwhitespace=true,
+    frame=single,
+    rulecolor=\color{black!50},
+    captionpos=b,
+    showstringspaces=false,
+    tabsize=2,
+    morekeywords={IRAM_ATTR}
+}
+
 % Rename bibliography heading
 \renewcommand{\bibname}{References}
 
@@ -251,21 +275,6 @@ This safety validation process acts as an interlock mechanism to prevent unsafe 
 
 The refill operation stops automatically once the required target volume has been measured by the flow sensor, mixed in the agitator-equipped mixing chamber, and delivered through the distribution pump and common dispensing pipeline.
 
-\chapter{Should be removed in final version: Remaining Work}
-
-\begin{itemize}
-
-    \item Communication between multiple dispensing tanks and the central controller was not fully implemented in the simulation and can be extended using MQTT, WiFi, or ZigBee communication protocols.
-
-    \item The present simulation demonstrates only one dispensing tank. In a real hospital deployment, multiple dispensing tanks would be managed using a queue-based refill scheduling algorithm.
-
-    \item The chemical concentration control was conceptually designed but not physically validated using real chemical mixing equipment.
-
-    \item Cloud-based monitoring dashboards and mobile notifications can be integrated in future implementations.
-
-    \item Additional industrial safety mechanisms such as redundant sensors, emergency shutoff systems, and battery backup systems may be incorporated for higher reliability.
-
-\end{itemize}
 
 \chapter{Component Selection}
 
@@ -1339,24 +1348,17 @@ The complete block diagram should show the concentrated chemical tank connected 
 
 
 \chapter[Operational State Diagram / Flow Chart for IoT Components]{Operational State Diagram /\\Flow Chart for IoT Components}
-\thispagestyle{empty}
 \begin{center}
     \vspace*{\fill}
-    \includegraphics[width=\textwidth,height=0.94\textheight,keepaspectratio]{flow-chart-01.png}
+    \includegraphics[width=\textwidth,height=0.90\textheight,keepaspectratio]{flow-chart-01.png}
     \vspace*{\fill}
 \end{center}
 \clearpage
-\clearpage
-\clearpage
 \begin{figure}[p]
     \centering
-    \includegraphics[width=\textwidth,height=0.9\textheight,keepaspectratio]{flow-chart-02.png}
+    \includegraphics[width=\textwidth,height=0.95\textheight,keepaspectratio]{flow-chart-02.png}
 \end{figure}
 \clearpage
-\clearpage
-
-The operational flow starts when a dispensing tank generates a low-level refill request. The ESP32 verifies water level, remaining chemical level, sensor status, and valve status. The peristaltic pump then doses the required concentrated chemical into the 10L SS316 mixing chamber while the flow sensor measures the dispensed volume. The agitator motor rotates the mixing blade to maintain continuous mixing until the solution reaches a uniform concentration. After mixing is completed, the diaphragm pump transfers the mixed solution through the common dispensing pipeline to the requested dispensing tank. The refill process stops when the target volume is reached or when a fault condition is detected.
-
 
 
 \chapter[Simulation Implementation and Source Code Attachment]{Simulation Implementation and\\Source Code Attachment}
@@ -1370,8 +1372,11 @@ The system was simulated using WokWi with:
     \item Alarm system
 \end{itemize}
 
-\section{Source Code (Attachment)}
-\noindent\textit{Placeholder. Attach well documented source code and reference it here.}
+\section{Source Code}
+The primary ESP32 sketch used for the WokWi simulation is included below with preserved code styling.
+
+\lstinputlisting[style=arduinoStyle,language=C++,label={lst:sketch},caption={ESP32 sketch for WokWi simulation}]{simulation/sketch.ino}
+
 
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{Conclusion}
