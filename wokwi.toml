@@ -1,4 +1,4 @@
 [wokwi]
 version = 1
-firmware = "simulation/sketch.ino.bin"
-elf = "simulation/sketch.ino.elf"
+firmware = "simulation/simulation.ino.bin"
+elf = "simulation/simulation.ino.elf"

@@ -17,3 +17,15 @@
 !/*/*.png
 !/*/*.jpg
 !/*/*.tex
+
+# Simulation build artifacts (keep source/diagram tracked)
+/simulation/build/
+/simulation/*.bin
+/simulation/*.elf
+/simulation/*.map
+/simulation/*.merged.bin
+/simulation/*.bootloader.bin
+/simulation/*.partitions.bin
+/simulation/*.o
+/simulation/*.hex
+/simulation/sketch.ino.bak
