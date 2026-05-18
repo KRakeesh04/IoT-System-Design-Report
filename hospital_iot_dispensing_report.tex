@@ -68,6 +68,12 @@
 \section*{Background}
 Hospitals use specialized disinfectant chemicals to sterilize medical instruments and equipment.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{system-design.png}
+    \label{fig:system_design_diagram}
+\end{figure}
+
 \section*{Objectives}
 \begin{itemize}
     \item Design a complete IoT-based chemical dispensing solution
@@ -77,15 +83,29 @@ Hospitals use specialized disinfectant chemicals to sterilize medical instrument
 \end{itemize}
 
 \section*{Proposed IoT System Architecture}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{system-architecture.png}
+    \caption{Complete system architecture for the Hospital Automated Chemical Dosing System.}
+    \label{fig:architecture_diagram}
+\end{figure}
+
 \subsection*{System Overview}
 The proposed system consists of:
 \begin{itemize}
     \item Purified water tank
     \item Concentrated chemical supply tank
-    \item Mixing chamber
+    \item SS316 mixing chamber tank with 10L capacity
+    \item Top-mounted agitator system
+    \item Distribution diaphragm pump
+    \item Common dispensing pipeline
     \item Dispensing tanks
     \item ESP32-based controller
 \end{itemize}
+
+The peristaltic pump is used only for accurate concentrated chemical dosing into the 10L SS316 stainless steel mixing chamber. Purified water and concentrated chemical enter the mixing chamber, where a top-mounted DC agitator motor with a mixing blade continuously mixes the solution before distribution. After the chemical is uniformly mixed with purified water, a separate 12V DC diaphragm pump transfers the mixed solution from the mixing chamber into the common dispensing pipeline. This pipeline then distributes the prepared solution to multiple dispensing tanks located in different hospital areas.
+
 
 \chapter{Method to Measure Water Level and Remaining Chemical Levels}
 
@@ -209,8 +229,12 @@ If the error exceeds a predefined threshold, the system assumes abnormal operati
     \item Unexpected chemical loss
 \end{itemize}
 
-The dispensing process is controlled using a PWM-controlled peristaltic pump together with a flow sensor. Although PWM adjusts the pump speed, it does not guarantee accurate liquid flow due to pressure variations, tubing resistance, viscosity changes, and pump wear.
+The concentrated chemical dosing process is controlled using a PWM-controlled peristaltic pump together with a flow sensor. The peristaltic pump is used for accurate dosing into the 10L SS316 mixing chamber because the liquid only contacts the tube and the flow can be measured directly. Although PWM adjusts the pump speed, it does not guarantee accurate liquid flow due to pressure variations, tubing resistance, viscosity changes, and pump wear.
 Therefore, actual flow measurement is required for accurate dispensing control.
+
+Inside the mixing chamber, a top-mounted DC agitator motor rotates a mixing blade to maintain continuous mixing. This helps maintain uniform chemical concentration before the solution is supplied to the distribution line.
+
+After mixing, a 12V DC diaphragm pump is placed after the mixing chamber and before the common dispensing pipeline. This pump is not used for concentration control; its purpose is to distribute the mixed solution from the mixing chamber to multiple dispensing tanks with stable pressure.
 
 The refill operation only begins after all safety conditions are validated by the ESP32 controller.
 The required pre-conditions are:
@@ -225,7 +249,7 @@ The required pre-conditions are:
 
 This safety validation process acts as an interlock mechanism to prevent unsafe dispensing conditions.
 
-The refill operation stops automatically once the required target volume has been measured by the flow sensor.
+The refill operation stops automatically once the required target volume has been measured by the flow sensor, mixed in the agitator-equipped mixing chamber, and delivered through the distribution pump and common dispensing pipeline.
 
 \chapter{Should be removed in final version: Remaining Work}
 
@@ -255,10 +279,13 @@ The refill operation stops automatically once the required target volume has bee
     \item Hall-Effect Flow Sensor for Flow Measurement
     \item Capacitive Sensor for Dispensing Tank Level Detection
     \item Peristaltic Pump for Chemical Dispensing
+    \item SS316 Mixing Chamber Tank (10L)
+    \item DC Agitator Motor with Mixing Blade
+    \item 12V DC Diaphragm Pump for Distribution System
     \item Normally Closed Solenoid Valve for Flow Control
     \item Piezo Buzzer for Alarm Indication
     \item LED Indicators for System Status Display
-    \item MOSFET Driver Module for Pump and Valve Control
+    \item MOSFET Driver Module for Pump, Agitator, and Valve Control
     \item WiFi Communication using ESP32 Built-in Module
 
 \end{itemize}
@@ -287,6 +314,12 @@ Capacitive Sensor (Dispensing Tank Level) & 1 & 1300 & 1300 \\
 \hline
 Peristaltic Pump & 1 & 3500 & 3500 \\
 \hline
+SS316 Mixing Chamber Tank (10L) & 1 & 6000 & 6000 \\
+\hline
+DC Agitator Motor with Mixing Blade & 1 & 3500 & 3500 \\
+\hline
+Distribution Diaphragm Pump & 1 & 4500 & 4500 \\
+\hline
 Normally Closed Solenoid Valve & 1 & 810 & 810 \\
 \hline
 Piezo Buzzer & 1 & 150 & 150 \\
@@ -300,10 +333,35 @@ MOSFET Driver Module & 1 & 350 & 350 \\
 Wires, Connectors, Tubing (Estimated) & 1 & 1000 & 1000 \\
 \hline
 
-\multicolumn{3}{|r|}{\textbf{Total}} & \textbf{13,540} \\
+\multicolumn{3}{|r|}{\textbf{Total}} & \textbf{27,540} \\
 \hline
 \end{tabularx}
 \caption{Estimated Total Hardware Cost for the Prototype (1 dispensing tank)}
+\end{table}
+
+\noindent For each additional dispensing tank, the shared components such as the ESP32 controller, purified water tank, chemical tank, mixing chamber, agitator, dosing pump, and distribution pump do not need to be duplicated. Only the tank-side sensing and flow-control components are added.
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|c|>{\raggedleft\arraybackslash}p{3cm}|>{\raggedleft\arraybackslash}p{3cm}|}
+\hline
+\textbf{Component} & \textbf{Qty} & \textbf{Unit Cost (Rs.)} & \textbf{Price (Rs.)} \\
+\hline
+
+Capacitive Sensor (Dispensing Tank Level) & 1 & 1300 & 1300 \\
+\hline
+Normally Closed Solenoid Valve & 1 & 810 & 810 \\
+\hline
+Wires, Connectors, and Tubing for Additional Tank & 1 & 500 & 500 \\
+\hline
+
+\multicolumn{3}{|r|}{\textbf{Additional Cost per Dispensing Tank}} & \textbf{2,610} \\
+\hline
+\end{tabularx}
+\caption{Estimated Additional Hardware Cost for One Additional Dispensing Tank}
 \end{table}
 
 
@@ -717,7 +775,7 @@ Product Link &
 
 The capacitive sensor was selected because it is compact, reliable, and suitable for small dispensing tanks with low maintenance requirements.
 
-\section{Pump Comparison}
+\section{Chemical Dosing Pump Comparison}
 
 \begin{table}[H]
 \centering
@@ -776,9 +834,9 @@ Easy \\
 \hline
 
 Approximate Market Price (2026) &
-RS. 2,000 -- 5,000 &
-RS. 3,500 -- 8,000 &
-RS. 250 -- 2,000 \\
+RS. 2,500 -- 4,500 &
+RS. 1,500 -- 8,000 &
+RS. 850 -- 4,900 \\
 \hline
 
 Suitability for This Project &
@@ -794,10 +852,144 @@ Product Link &
 \hline
 
 \end{tabularx}
-\caption{Comparison of Pump Types}
+\caption{Comparison of Chemical Dosing Pump Types}
 \end{table}
 
 The peristaltic pump was selected because it provides accurate dispensing, low contamination risk, and supports controlled chemical flow.
+
+\section{Mixing Method Comparison}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{3cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Feature} & \textbf{Mechanical Agitator} & \textbf{Magnetic Stirrer} & \textbf{Natural Turbulent Mixing} \\
+\hline
+
+Mixing Performance &
+High and uniform mixing using a rotating blade &
+Good for small laboratory volumes &
+Low and depends on inlet flow turbulence \\
+\hline
+
+Suitable Volume Range &
+Suitable for 10L and larger small industrial tanks &
+Mostly suitable for small beakers and laboratory containers &
+Suitable only for simple low-accuracy mixing \\
+\hline
+
+Continuous Operation &
+Suitable for continuous operation with motor speed control &
+Possible, but limited by stirrer capacity and heating plate design &
+No active control over mixing continuity \\
+\hline
+
+Maintenance Requirement &
+Moderate due to motor, shaft, and blade cleaning &
+Low to moderate &
+Low \\
+\hline
+
+Industrial Suitability &
+Highly suitable for small process tanks &
+Limited for industrial tank mixing &
+Limited for controlled chemical concentration \\
+\hline
+
+Cost &
+Moderate &
+High &
+Minimal \\
+\hline
+
+Approximate Market Price (2026) &
+RS. 3,000 -- 10,000 &
+RS. 10,000 -- 20,000 &
+Minimal \\
+\hline
+
+Suitability for This Project &
+Highly suitable &
+Moderately suitable &
+Limited \\
+\hline
+
+Product Link &
+\url{https://www.daraz.lk/tag/dc-geared-motor/} &
+\url{https://www.daraz.lk/tag/magnetic-stirrer/} &
+N/A \\
+\hline
+
+\end{tabularx}
+\caption{Comparison of Mixing Methods}
+\end{table}
+
+The mechanical agitator system was selected because it provides reliable continuous mixing, supports larger liquid volumes, and ensures uniform chemical concentration before distribution to dispensing tanks.
+
+\section{Distribution Pump Comparison}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{3cm}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Feature} & \textbf{Diaphragm Pump} & \textbf{Centrifugal Pump} & \textbf{Peristaltic Pump} \\
+\hline
+
+Flow Capability &
+Moderate to high flow for small distribution systems &
+High flow but depends strongly on priming and installation &
+Low to moderate flow, mainly suitable for dosing \\
+\hline
+
+Pressure Stability &
+Good pressure output with self-priming operation &
+Moderate pressure stability, affected by head and pipeline load &
+Pulsed flow, stable for small metered dosing only \\
+\hline
+
+Pipeline Distribution Suitability &
+Highly suitable for common pipeline distribution to multiple tanks &
+Suitable for simple water transfer, but less suitable for controlled small pipelines &
+Limited because the flow rate is low for distribution use \\
+\hline
+
+Maintenance Requirement &
+Moderate &
+Low to moderate &
+Low, but tube replacement is required \\
+\hline
+
+Cost &
+Moderate &
+Low to moderate &
+Moderate \\
+\hline
+
+Approximate Market Price (2026) &
+RS. 1,500 -- 8,000 &
+RS. 850 -- 4,900 &
+RS. 2,500 -- 4,500 \\
+\hline
+
+Suitability for This Project &
+Highly suitable &
+Moderately suitable &
+Limited for distribution; suitable for dosing only \\
+\hline
+
+Product Link &
+\url{https://tronic.lk/product/diaphragm-water-pump-12v-7lmin-hy-5200} &
+\url{https://lk-tronics.com/product-tag/water-pump/} &
+\url{https://www.daraz.lk/tag/12v-peristaltic-pump/} \\
+\hline
+
+\end{tabularx}
+\caption{Comparison of Distribution Pump Types}
+\end{table}
+
+The diaphragm pump was selected for the distribution system because it provides stable pressure, supports multiple dispensing tanks, and is suitable for continuous liquid transfer through common pipelines.
 
 \section{Valve Comparison}
 
@@ -930,6 +1122,8 @@ The proposed automated chemical dispensing system uses both sensor-based and com
 
     \item Refill timeout monitoring for detecting pump or valve failures
 
+    \item Agitator operation monitoring during the mixing stage
+
     \item Leakage detection by comparing expected and measured chemical reduction
 
     \item Sequential refill scheduling algorithm for managing multiple dispensing tanks
@@ -961,6 +1155,16 @@ Stop pump operation and notify operator \\
 Pump Failure &
 No flow pulses detected during refill &
 Stop system and activate alarm \\
+\hline
+
+Distribution Pump Failure &
+Low delivery flow or refill timeout after mixing &
+Stop distribution pump, close valves, and activate alarm \\
+\hline
+
+Agitator Failure &
+No motor operation detected during mixing stage &
+Stop refill operation and prevent distribution until mixing is restored \\
 \hline
 
 Blocked Valve or Pipeline &
@@ -1113,7 +1317,16 @@ Although ZigBee provides lower power consumption and better mesh networking capa
 
 
 \chapter[Complete System Schematic Block Diagram]{Complete System\\Schematic Block Diagram}
-\noindent\textit{Placeholder. Insert the complete schematic block diagram of all system components.}
+\noindent\textit{Complete schematic block diagram of all system components.}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{block-diagram.png}
+    \caption{Complete system block diagram for the Hospital Automated Chemical Dosing System.}
+    \label{fig:block_diagram}
+\end{figure}
+
+The complete block diagram should show the concentrated chemical tank connected to the peristaltic dosing pump and flow sensor before entering the 10L SS316 mixing chamber. The purified water tank also feeds the mixing chamber. A top-mounted DC agitator motor with a mixing blade is installed on the mixing chamber to provide continuous mixing before distribution. After mixing, the 12V DC diaphragm pump is placed after the mixing chamber and before the common dispensing pipeline. The common pipeline then branches to multiple dispensing tanks controlled using solenoid valves and monitored using capacitive level sensors.
 
 
 
@@ -1124,6 +1337,8 @@ Although ZigBee provides lower power consumption and better mesh networking capa
 
 \chapter[Operational State Diagram / Flow Chart for IoT Components]{Operational State Diagram /\\Flow Chart for IoT Components}
 \noindent\textit{Placeholder. Insert the algorithm flow chart / state diagram per IoT component.}
+
+The operational flow starts when a dispensing tank generates a low-level refill request. The ESP32 verifies water level, remaining chemical level, sensor status, and valve status. The peristaltic pump then doses the required concentrated chemical into the 10L SS316 mixing chamber while the flow sensor measures the dispensed volume. The agitator motor rotates the mixing blade to maintain continuous mixing until the solution reaches a uniform concentration. After mixing is completed, the diaphragm pump transfers the mixed solution through the common dispensing pipeline to the requested dispensing tank. The refill process stops when the target volume is reached or when a fault condition is detected.
 
 
 
