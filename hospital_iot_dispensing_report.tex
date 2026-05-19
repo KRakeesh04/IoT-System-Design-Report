@@ -153,11 +153,14 @@ The proposed system consists of:
     \item Top-mounted agitator system
     \item Distribution diaphragm pump
     \item Common dispensing pipeline
-    \item Dispensing tanks
+    \item Groups of nearby dispensing tanks (dispensing blocks)
+    \item Local ESP32 nodes placed near each dispensing block for sensor reading and control
     \item ESP32-based controller
 \end{itemize}
 
-The peristaltic pump is used only for accurate concentrated chemical dosing into the 10L SS316 stainless steel mixing chamber. Purified water and concentrated chemical enter the mixing chamber, where a top-mounted DC agitator motor with a mixing blade continuously mixes the solution before distribution. After the chemical is uniformly mixed with purified water, a separate 12V DC diaphragm pump transfers the mixed solution from the mixing chamber into the common dispensing pipeline. This pipeline then distributes the prepared solution to multiple dispensing tanks located in different hospital areas.
+The proposed architecture supports many dispensing blocks placed in different hospital areas. A dispensing block is a small group of tanks that are near each other. Each tank in the block has a solenoid valve and a capacitive level sensor. These sensors and valves are connected with short wires to a nearby ESP32 node. The local ESP32 reads the sensor signals on its GPIO pins, checks for faults, and sends status messages wirelessly to the central controller.
+
+The peristaltic pump is used only for accurate concentrated chemical dosing into the 10L SS316 stainless steel mixing chamber. Purified water and concentrated chemical enter the mixing chamber, where a top-mounted DC agitator motor with a mixing blade continuously mixes the solution before distribution. After the chemical is uniformly mixed with purified water, a separate 12V DC diaphragm pump transfers the mixed solution from the mixing chamber into the common dispensing pipeline. This pipeline then distributes the prepared solution to the distributed dispensing tank blocks.
 
 
 \chapter{Method to Measure Water Level and Remaining Chemical Levels}
@@ -232,7 +235,7 @@ The system contains two separate liquid systems:
     \item Diluted chemical dispensing tanks
 \end{itemize}
 
-\noindent Capacitive level sensors are installed on the dispensing tanks to detect low-level refill conditions and generate refill requests to the ESP32 controller.
+\noindent Capacitive level sensors are installed on each dispensing tank in a block to detect low-level refill conditions. These sensors make electrical signals that are read by a nearby ESP32 node using short wires and the node's GPIO inputs. The sensors do not send data directly to the cloud or the central controller.
 
 \noindent The concentrated chemical tank uses two monitoring methods:
 
@@ -241,7 +244,7 @@ The system contains two separate liquid systems:
     \item Load cell weight sensor
 \end{itemize}
 
-The YF-S201 flow sensor continuously measures the amount of concentrated chemical dispensed into the mixing chamber. The ESP32 controller maintains a cumulative record of the total dispensed chemical volume.
+The YF-S201 flow sensor continuously measures the amount of concentrated chemical dispensed into the mixing chamber. The local ESP32 controller maintains a cumulative record of the total dispensed chemical volume.
 
 \noindent The remaining chemical quantity can be estimated using:
 
@@ -340,7 +343,7 @@ The refill operation stops automatically once the required target volume has bee
 \textbf{Component} & \textbf{Qty} & \textbf{Unit Cost (Rs.)} & \textbf{Price (Rs.)} \\
 \hline
 
-ESP32 DevKit V1 Microcontroller & 1 & 1,500 & 1,500 \\
+ESP32 DevKit V1 Local Node & 1 & 1,500 & 1,500 \\
 \hline
 Ultrasonic Sensor (Water Tank Level) & 1 & 1,880 & 1,880 \\
 \hline
@@ -348,7 +351,7 @@ Load Cell + HX711 Module (Chemical Tank) & 1 & 480 & 480 \\
 \hline
 Hall-Effect Flow Sensor & 1 & 650 & 650 \\
 \hline
-Capacitive Sensor (Dispensing Tank Level) & 1 & 1300 & 1300 \\
+Capacitive Sensor (One Tank in the Block) & 1 & 1300 & 1300 \\
 \hline
 Peristaltic Pump & 1 & 3500 & 3500 \\
 \hline
@@ -374,10 +377,10 @@ Wires, Connectors, Tubing (Estimated) & 1 & 1000 & 1000 \\
 \multicolumn{3}{|r|}{\textbf{Total}} & \textbf{27,540} \\
 \hline
 \end{tabularx}
-\caption{Estimated Total Hardware Cost for the Prototype (1 dispensing tank)}
+\caption{Estimated Hardware Cost for One Dispensing Block with One Local Node}
 \end{table}
 
-\noindent For each additional dispensing tank, the shared components such as the ESP32 controller, purified water tank, chemical tank, mixing chamber, agitator, dosing pump, and distribution pump do not need to be duplicated. Only the tank-side sensing and flow-control components are added.
+\noindent For each additional tank in the same block, the shared node, pump, mixer, and power parts stay the same. Only the tank-side sensor, valve, and short wiring are added.
 
 \begin{table}[H]
 \centering
@@ -386,20 +389,19 @@ Wires, Connectors, Tubing (Estimated) & 1 & 1000 & 1000 \\
 \renewcommand{\arraystretch}{1.15}
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|c|>{\raggedleft\arraybackslash}p{3cm}|>{\raggedleft\arraybackslash}p{3cm}|}
 \hline
-Servo PWM (valve) & D4 & Valve actuator in simulation (real system uses a normally-closed solenoid valve) \\
+\textbf{Component} & \textbf{Qty} & \textbf{Unit Cost (Rs.)} & \textbf{Price (Rs.)} \\
 \hline
-
-Capacitive Sensor (Dispensing Tank Level) & 1 & 1300 & 1300 \\
+Capacitive Sensor (One More Tank) & 1 & 1300 & 1300 \\
 \hline
 Normally Closed Solenoid Valve & 1 & 810 & 810 \\
 \hline
-Wires, Connectors, and Tubing for Additional Tank & 1 & 500 & 500 \\
+Wires, Connectors, and Tubing for One More Tank & 1 & 500 & 500 \\
 \hline
 
-\multicolumn{3}{|r|}{\textbf{Additional Cost per Dispensing Tank}} & \textbf{2,610} \\
+\multicolumn{3}{|r|}{\textbf{Additional Cost per Tank in the Same Block}} & \textbf{2,610} \\
 \hline
 \end{tabularx}
-\caption{Estimated Additional Hardware Cost for One Additional Dispensing Tank}
+\caption{Estimated Additional Hardware Cost for One More Tank in the Same Block}
 \end{table}
 
 
@@ -1122,11 +1124,11 @@ The proposed automated chemical dispensing system uses both sensor-based and com
 \begin{itemize}
     \item Ultrasonic sensor for purified water tank level monitoring
 
-    \item Capacitive level sensors are installed on the dispensing tanks to detect low-level refill conditions
+    \item Capacitive level sensors mounted on each dispensing tank block to detect low-level refill conditions through a local ESP32 node
 
     \item YF-S201 flow sensor for measuring liquid flow rate and dispensed volume
 
-    \item Load cell sensor with HX711 module for monitoring concentrated chemical quantity
+    \item Load cell sensor with HX711 module for monitoring concentrated chemical quantity locally
 
 \end{itemize}
 
@@ -1232,7 +1234,7 @@ Normally closed solenoid valves are used to automatically stop liquid flow durin
 
 \section{Data Collection from Dispensing Tanks}
 
-The dispensing tanks are distributed across different areas of the hospital and require continuous monitoring for refill management and fault detection. Capacitive level sensors are installed on the dispensing tanks to detect low-level refill conditions and generate refill requests.
+The dispensing tanks are spread across different areas of the hospital and need regular checks for refills and faults. Each dispensing block is a small group of tanks placed close to one another. Each tank has a solenoid valve and a capacitive level sensor. The sensors and valves are wired to a nearby ESP32 node with short cables. The ESP32 reads the sensor signals and handles safety checks. The sensor signals are not sent directly to the cloud or to a central controller.
 
 Sensor data collected from the dispensing tanks includes:
 
@@ -1243,31 +1245,31 @@ Sensor data collected from the dispensing tanks includes:
     \item Fault and overflow conditions
 \end{itemize}
 
-The sensor data is collected by ESP32-based controller nodes located near the dispensing tanks or connected directly to the central ESP32 controller depending on the installation distance and infrastructure layout.
+The sensor data is collected by ESP32-based local controller nodes located near the dispensing tanks. Direct long-distance wiring from every sensor to a central controller is impractical in a hospital because it increases cable length, installation effort, signal noise, voltage drop, and maintenance complexity. Using local ESP32 nodes close to the tanks improves scalability, reliability, and fault isolation.
 
-The collected data is transmitted to the central controller through a wireless communication network. The central ESP32 controller processes the received sensor data and manages refill scheduling, alarm generation, safety validation, and system monitoring operations.
+The local ESP32 nodes process the GPIO-based sensor readings and transmit the processed data to the central controller through a wireless communication network. This distributed arrangement is suitable for hospital-wide deployment because it allows tanks in different locations to be added without running new long sensor cables back to one central point. The central ESP32 controller processes the received status data and manages refill scheduling, alarm generation, safety validation, and system monitoring operations.
 
-For remote monitoring and IoT functionality, the central ESP32 controller transmits system telemetry to a cloud dashboard using MQTT over the hospital WiFi network. Hospital operators access monitoring information from the cloud dashboard using HTTPS from a mobile or web application. The communication chain is:
+For remote monitoring and IoT functionality, the central ESP32 controller transmits system telemetry to a cloud platform using MQTT over the hospital WiFi network. Hospital operators access monitoring information from the cloud platform using HTTPS from a mobile or web application. The communication chain is:
 
 \begin{center}
-ESP32 Controller $\to$ WiFi $\to$ MQTT Broker $\to$ Cloud Dashboard $\to$ HTTPS Mobile/Web Application
+Dispensing Tank Sensors $\to$ Local ESP32 Node $\to$ Wireless Communication Network $\to$ Central ESP32 Controller $\to$ MQTT Broker $\to$ Cloud Platform $\to$ HTTPS API $\to$ Dashboard or Mobile Application
 \end{center}
 
-The ESP32 controller performs local control functions including refill control, safety logic, alarm handling, and sensor monitoring. The cloud platform is used only for monitoring, logging, alert forwarding, and remote access — it does not perform the real-time control of refill operations.
+The local ESP32 nodes and the central ESP32 controller perform the local control functions, including refill control, safety logic, alarm handling, and sensor monitoring. The cloud platform is used only for monitoring, logging, alert forwarding, and remote access; it does not perform the real-time control of refill operations.
 
 This architecture supports:
 
 \begin{itemize}
-    \item Distributed dispensing tank monitoring
-    \item Centralized refill management
-    \item Real-time alarm handling
+    \item Distributed dispensing tank monitoring across multiple hospital locations
+    \item Centralized refill management with local node-based validation
+    \item Real-time alarm handling at the local node and central controller
     \item Cloud-based monitoring and logging
-    \item Remote maintenance access
+    \item Remote maintenance access through secure web and mobile clients
 \end{itemize}
 
 \section{Communication Method Comparison}
 
-Two communication methods considered for this project were WiFi and ZigBee. These methods were compared based on communication range, power consumption, implementation complexity, scalability, and suitability for hospital environments.
+Two communication methods considered for this project were WiFi and ZigBee. These methods were compared based on communication range, power consumption, scalability, implementation complexity, ESP32 compatibility, and suitability for hospital infrastructure.
 
 \begin{table}[H]
 \centering
@@ -1279,13 +1281,13 @@ Two communication methods considered for this project were WiFi and ZigBee. Thes
 \textbf{Feature} & \textbf{WiFi} & \textbf{ZigBee} \\
 \hline
 
-Communication Range & Moderate & Moderate to High \\
+Communication Range & Moderate in building coverage & Moderate to High \\
 \hline
 
 Power Consumption & High & Low \\
 \hline
 
-Data Transmission Speed & High & Low \\
+Data Transmission Speed & High & Lower than WiFi \\
 \hline
 
 Ease of Implementation & Easy & Moderate \\
@@ -1300,7 +1302,7 @@ Network Scalability & Moderate & High \\
 Mesh Networking Support & Limited & Yes \\
 \hline
 
-Internet Connectivity & Direct & Requires gateway \\
+Hospital Infrastructure Suitability & Strong fit with existing hospital WiFi and MQTT integration & Suitable for large meshes, but requires gateways and extra planning \\
 \hline
 
 Approximate Hardware Cost & Low & Moderate \\
@@ -1317,7 +1319,7 @@ Hardware Module Link & Available in ESP32 & \url{https://tronic.lk/product/xbee-
 
 WiFi communication was selected as the primary communication method for the proposed prototype because the ESP32 controller provides built-in WiFi capability without requiring additional communication modules.
 
-WiFi supports direct communication between distributed dispensing tank controllers and the central controller through the hospital wireless network infrastructure. This allows real-time monitoring of dispensing tank levels, refill requests, flow conditions, and system alarms.
+WiFi supports wireless communication between the distributed local ESP32 nodes and the central controller through the hospital wireless network infrastructure. This allows real-time monitoring of dispensing tank levels, refill requests, flow conditions, and system alarms without direct long-distance sensor wiring.
 
 Compared with ZigBee, WiFi provides:
 
@@ -1328,24 +1330,25 @@ Compared with ZigBee, WiFi provides:
     \item Lower implementation complexity for the prototype system
 \end{itemize}
 
-Although ZigBee provides lower power consumption and better mesh-network capability for large distributed systems, it requires additional hardware modules and more complex network configuration.
+Although ZigBee provides lower power consumption and better mesh-network capability for very large distributed systems, it requires additional hardware modules and more complex network configuration. It is therefore more suitable for large mesh deployments than for a low-complexity prototype.
 
-For IoT monitoring functionality, MQTT protocol is used over the WiFi network to transmit system telemetry data between the ESP32 controller and the cloud dashboard. MQTT provides lightweight and reliable communication suitable for real-time IoT monitoring systems.
+For IoT monitoring functionality, MQTT protocol is used over the WiFi network to transmit system telemetry data between the central ESP32 controller and the cloud platform. MQTT provides lightweight and reliable communication suitable for real-time IoT monitoring systems.
 
 The communication architecture of the proposed system is:
 
-Dispensing Tank Sensors → ESP32 Controller → WiFi Network → MQTT Broker → Cloud Dashboard → HTTPS Mobile/Web Application
+Dispensing Tank Sensors $\to$ Local ESP32 Node $\to$ Wireless Communication Network $\to$ Central ESP32 Controller $\to$ MQTT Broker $\to$ Cloud Platform $\to$ HTTPS API $\to$ Dashboard or Mobile Application
 
-HTTPS communication is used between the cloud platform and the mobile monitoring application to provide secure remote access for hospital operators and maintenance personnel.
+HTTPS communication is used between the cloud platform and the dashboard or mobile application to provide secure remote access for hospital operators and maintenance personnel.
 
 WiFi with MQTT was selected because the proposed system operates inside a hospital building with existing WiFi infrastructure and requires real-time cloud monitoring capability.
 \vspace{6pt}
+
 \noindent\textbf{How dispensing tank data is collected and communicated:}
 \begin{itemize}
-    \item Each dispensing tank is monitored by a local ESP32 node or a sensor wired to a nearby ESP32 placed within hospital WiFi coverage.
-    \item The local ESP32 node reads the capacitive level sensors, performs local safety checks, and publishes telemetry to an MQTT broker over WiFi.
-    \item The cloud dashboard subscribes to MQTT topics to aggregate telemetry. Mobile and web applications access aggregated data from the cloud over HTTPS.
-    \item For wide-area deployments, additional WiFi access points or local gateways should be used to ensure reliable connectivity. ZigBee with gateways can be considered for very large, low-power networks.
+    \item Each dispensing block is a small group of tanks monitored by a nearby ESP32 node. The sensors and valves are connected to that node with short wires, not long runs back to the central controller.
+    \item The local ESP32 node reads the capacitive level sensor, executes local safety checks, and publishes telemetry to an MQTT broker over WiFi.
+    \item The cloud platform subscribes to MQTT topics to aggregate telemetry. Mobile and web applications access aggregated data from the cloud platform over HTTPS.
+    \item For hospital-wide deployment, additional WiFi access points can extend coverage. ZigBee can be considered for very large mesh networks, but it adds hardware and configuration complexity.
 \end{itemize}
 
 
@@ -1384,7 +1387,7 @@ RGB LED (R/G/B) & D14 / D27 / D33 & System status indicators \\
 Buzzer & D25 & Audible alarm/notification \\
 Push-button: Tank request & D13 & Manual refill request (active-low) \\
 Push-button: Flow pulse & D26 & Simulated flow pulses \\
-Push-button: Chemical OK & D12 & Chemical present confirmation \\
+Push-button: Chemical / load-cell status & D12 & Simulated chemical level confirmation \\
 Serial & TX0 / RX0 & Debug / serial monitor \\
 \bottomrule
 \end{tabular}
@@ -1409,7 +1412,7 @@ Serial & TX0 / RX0 & Debug / serial monitor \\
 \chapter{Simulation of the Implementation}
 
 \section{Simulation}
-The WokWi simulation uses an ESP32 DevKit V1 and the peripheral modules listed below.
+The WokWi simulation uses an ESP32 DevKit V1 to demonstrate a single dispensing node and the central controller logic. The peripheral modules listed below represent the behavior of the real system in a simplified form.
 
 \noindent\textbf{Simulated parts:}
 \begin{itemize}
@@ -1419,16 +1422,16 @@ The WokWi simulation uses an ESP32 DevKit V1 and the peripheral modules listed b
     \item SG90-style servo (used only in Wokwi to emulate solenoid valve actuation; the real system uses a normally-closed solenoid valve)
     \item RGB LED (with series resistors on R/G/B lines)
     \item Piezo buzzer
-    \item Three push-buttons to emulate: tank request, flow pulse, chemical present
+    \item Three push-buttons to emulate: tank request, flow pulse, and chemical or load-cell status
     \item Breadboard for power and common ground wiring
 \end{itemize}
 \vspace{4pt}
 \noindent\textbf{Simulation notes:}
 \begin{itemize}
     \item The real system uses a normally-closed solenoid valve for flow control; a small servo is used in Wokwi only because Wokwi does not simulate solenoid valve hardware directly.
-    \item Chemical availability in the simulation is represented by a push-button input. In the real system chemical level is measured by a load cell with an HX711 module.
+    \item Load cell behavior in the simulation is represented by a push-button input. In the real system chemical level is measured by a load cell with an HX711 module.
     \item Flow pulse generation in the simulation is emulated using a push-button to trigger pulses; in the real system the YF-S201 flow sensor produces pulse signals proportional to flow.
-    \item The Wokwi simulation demonstrates refill and monitoring logic for a single dispensing tank. The proposed architecture supports multiple dispensing tanks in the field.
+    \item The Wokwi simulation demonstrates refill and monitoring logic for a single dispensing node, while the proposed real-world architecture supports multiple distributed dispensing tank blocks.
     \item The simulation validates control logic and monitoring behavior only; it does not model actual fluid dynamics or chemical mixing physics.
 \end{itemize}
 \section{Source Code}
@@ -1441,8 +1444,8 @@ The WokWi simulation uses an ESP32 DevKit V1 and the peripheral modules listed b
 An IoT-based automated hospital chemical dispensing system was designed and simulated. 
 It uses an ESP32 controller with ultrasonic, load cell, flow, and capacitive sensors, plus peristaltic and diaphragm pumps for accurate dosing and mixing.
 Multiple safety features detect leaks, overflows, and sensor faults.
-WiFi with MQTT enables real-time monitoring and alerts.
-The Wokwi simulation validated the core functions.
+WiFi with MQTT enables real-time monitoring and alerts, while the cloud platform is used for monitoring and logging rather than direct control.
+The Wokwi simulation validated the core logic for one dispensing node in the larger distributed architecture.
 
 \begin{thebibliography}{9}
 \addcontentsline{toc}{chapter}{References}
@@ -1472,7 +1475,7 @@ YouTube, ``Zigbee Overview,'' 2024. [Online]. Available: \url{https://youtu.be/l
 Wikipedia, \textit{LoRa}. [Online]. Available: \url{https://en.wikipedia.org/wiki/LoRa}
 
 \bibitem{chatgpt}
-OpenAI, "ChatGPT". [Online]. Available: \url{https://chat.openai.com/}.
+OpenAI, "ChatGPT," used to help generate the system architecture image. [Online]. Available: \url{https://chat.openai.com/}.
 
 \end{thebibliography}
 
