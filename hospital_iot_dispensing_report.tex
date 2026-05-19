@@ -1236,28 +1236,17 @@ Normally closed solenoid valves are used to automatically stop liquid flow durin
 
 The dispensing tanks are spread across different areas of the hospital and need regular checks for refills and faults. Each dispensing block is a small group of tanks placed close to one another. Each tank has a solenoid valve and a capacitive level sensor. The sensors and valves are wired to a nearby ESP32 node with short cables. The ESP32 reads the sensor signals and handles safety checks. The sensor signals are not sent directly to the cloud or to a central controller.
 
-Sensor data collected from the dispensing tanks includes:
+\noindent Sensor data collected from the dispensing tanks includes:
 
 \begin{itemize}
-    \item Dispensing tank liquid level status
-    \item Refill request signals
-    \item Flow monitoring information
-    \item Fault and overflow conditions
+       \item Tank level
+       \item Flow pulse counts
+       \item Fault and overflow alerts
 \end{itemize}
 
-The sensor data is collected by ESP32-based local controller nodes located near the dispensing tanks. Direct long-distance wiring from every sensor to a central controller is impractical in a hospital because it increases cable length, installation effort, signal noise, voltage drop, and maintenance complexity. Using local ESP32 nodes close to the tanks improves scalability, reliability, and fault isolation.
+Local ESP32 nodes collect and pre-process sensor readings and forward compact telemetry to the central controller over wireless. The central controller manages refill scheduling and alarms; the cloud (MQTT) stores telemetry for monitoring and remote access only.
 
-The local ESP32 nodes process the GPIO-based sensor readings and transmit the processed data to the central controller through a wireless communication network. This distributed arrangement is suitable for hospital-wide deployment because it allows tanks in different locations to be added without running new long sensor cables back to one central point. The central ESP32 controller processes the received status data and manages refill scheduling, alarm generation, safety validation, and system monitoring operations.
-
-For remote monitoring and IoT functionality, the central ESP32 controller transmits system telemetry to a cloud platform using MQTT over the hospital WiFi network. Hospital operators access monitoring information from the cloud platform using HTTPS from a mobile or web application. The communication chain is:
-
-\begin{center}
-Dispensing Tank Sensors $\to$ Local ESP32 Node $\to$ Wireless Communication Network $\to$ Central ESP32 Controller $\to$ MQTT Broker $\to$ Cloud Platform $\to$ HTTPS API $\to$ Dashboard or Mobile Application
-\end{center}
-
-The local ESP32 nodes and the central ESP32 controller perform the local control functions, including refill control, safety logic, alarm handling, and sensor monitoring. The cloud platform is used only for monitoring, logging, alert forwarding, and remote access; it does not perform the real-time control of refill operations.
-
-This architecture supports:
+\noindent This architecture supports:
 
 \begin{itemize}
     \item Distributed dispensing tank monitoring across multiple hospital locations
@@ -1269,7 +1258,9 @@ This architecture supports:
 
 \section{Communication Method Comparison}
 
-Two communication methods considered for this project were WiFi and ZigBee. These methods were compared based on communication range, power consumption, scalability, implementation complexity, ESP32 compatibility, and suitability for hospital infrastructure.
+WiFi and ZigBee were compared for range, power, scalability, complexity, and ESP32 support.
+
+For areas where WiFi is unreliable or unavailable (for example, basements or remote wings), LoRa/LoRaWAN is an alternative. LoRa gives long range and low power use, but it has low data rates and needs a gateway and network server. LoRa is good for occasional telemetry such as tank level updates, but not for high-rate flow data or real-time control. Using LoRa requires extra hardware (LoRa transceivers or gateway) and planning gateway placement to cover the blocks.
 
 \begin{table}[H]
 \centering
@@ -1409,7 +1400,7 @@ Serial & TX0 / RX0 & Debug / serial monitor \\
 \end{figure}
 
 
-\chapter{Simulation of the Implementation}
+\chapter{Simulation of the prototype system in WokWi}
 
 \section{Simulation}
 The WokWi simulation uses an ESP32 DevKit V1 to demonstrate a single dispensing node and the central controller logic. The peripheral modules listed below represent the behavior of the real system in a simplified form.
