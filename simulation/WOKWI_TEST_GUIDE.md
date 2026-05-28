@@ -1,15 +1,24 @@
 # Wokwi Simulation Testing Guide
 
 ## Prerequisites
-- Reload Wokwi with the latest `simulation/simulation.ino.bin`
-- Open **Wokwi Serial Monitor** (bottom panel)
+- Reload Wokwi with the latest `simulation/controller/controller.ino.bin` and `simulation/local_node/local_node.ino.bin`
+  Open **Wokwi Serial Monitor** (bottom panel)
 
 ---
 
+## Communication Method
+
+The local node connects to the central controller over WiFi.
+The central ESP32 hosts a WiFi access point and the local node sends HTTP requests to it.
+The request button and servo valve stay on the local node.
+The sensors, RGB LED, buzzer, and OLED stay on the central controller.
+
 ## Full Refill Cycle Test (Button Press Method)
 
-### Step 1: Verify System Startup
-**Time: 0-5 seconds**
+**Refill denied immediately:**
+- ✅ Make sure the central ESP32 is loaded with `simulation/controller/controller.ino.bin`
+- ✅ Make sure the local node is connected to the `HospitalCentral` WiFi network
+- ✅ Check that the request button is wired to `localNodeEsp:D13` and the valve servo is wired to `localNodeEsp:D4`
 
 **Expected Serial Output:**
 ```
@@ -25,6 +34,7 @@ System Started
 **Visual Check:**
 - ✅ RGB LED should be **GREEN** (ready state)
 - ✅ OLED should display "System Started / Ready"
+- ✅ Central controller should report that it is waiting for local node requests
 
 ---
 
@@ -53,6 +63,8 @@ Water Level: 98.03 cm
 [EVENT] Tank Refill Request - Starting validation
 [CHECK] Water Level: 98.03
 [CHECK] Chemical Status: OK
+[NODE] Sending refill request to central controller
+[NODE] Central response: APPROVE
 [INFO] Validation passed - Starting refill
 Refill Started
 Mixing Active
@@ -145,7 +157,7 @@ Output: [CMD] Manual START refill
 
 **Buttons don't respond:**
 - ✅ Try serial command `s` instead
-- ✅ Check Wokwi diagram connections (pin D13, D26, D12)
+- ✅ Check Wokwi diagram connections for the local node request button and central controller sensors
 
 **Water level stuck at 98.03:**
 - ✅ This is normal (HC-SR04 in Wokwi is simulated at fixed distance)
@@ -157,6 +169,11 @@ Output: [CMD] Manual START refill
 **RGB LED doesn't change:**
 - ✅ Verify resistors (r1, r2, r3) are connected to RGB
 - ✅ Check RGB pinout (D14=RED, D27=GREEN, D33=BLUE)
+
+**Refill denied immediately:**
+- ✅ Make sure the central ESP32 is loaded with `simulation/controller/controller.ino.bin`
+- ✅ Check that the local node is connected to the `HospitalCentral` WiFi network
+- ✅ Check that the request button is wired to `localNodeEsp:D13` and the valve servo is wired to `localNodeEsp:D4`
 
 ---
 

@@ -1,5 +1,5 @@
 [wokwi]
 version = 1
-firmware = "simulation.ino.bin"
-elf = "simulation.ino.elf"
+firmware = "controller/controller.ino.bin"
+elf = "controller/controller.ino.elf"
 diagram = "diagram.json"
