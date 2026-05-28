@@ -10,13 +10,34 @@
       "left": 237.6,
       "attrs": { "color": "#eeefed" }
     },
-    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 43.1, "left": 177.4, "attrs": {} },
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "centralNodeEsp",
+      "top": 43.1,
+      "left": 177.4,
+      "attrs": {
+        "firmware": "controller/controller.ino.bin",
+        "elf": "controller/controller.ino.elf",
+        "label": "Central Controller"
+      }
+    },
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "localNodeEsp",
+      "top": 43.1,
+      "left": 695.8,
+      "attrs": {
+        "firmware": "local_node/local_node.ino.bin",
+        "elf": "local_node/local_node.ino.elf",
+        "label": "Local Node"
+      }
+    },
     { "type": "wokwi-hc-sr04", "id": "ultrasonic", "top": -27.3, "left": 475.9, "attrs": {} },
     {
       "type": "wokwi-pushbutton",
       "id": "tankRequestBtn",
-      "top": 275,
-      "left": 9.6,
+      "top": 284.6,
+      "left": 585.6,
       "attrs": { "color": "green", "xray": "1", "label": "tank request" }
     },
     {
@@ -74,54 +95,95 @@
     {
       "type": "wokwi-servo",
       "id": "servo1",
-      "top": 209.2,
-      "left": 460.8,
-      "rotate": 180,
+      "top": 265,
+      "left": 855.4,
+      "rotate": 90,
       "attrs": { "hornColor": "#ccc", "label": "solenoid Valve" }
     },
-    { "type": "wokwi-rgb-led", "id": "rgb1", "top": 42.4, "left": -392.5, "attrs": {} }
+    { "type": "wokwi-rgb-led", "id": "rgb1", "top": 42.4, "left": -392.5, "attrs": {} },
+    {
+      "type": "wokwi-text",
+      "id": "text1",
+      "top": 249.6,
+      "left": 182.4,
+      "attrs": { "text": "Central Controller" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "text2",
+      "top": 259.2,
+      "left": 710.4,
+      "attrs": { "text": "Local Node" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "text3",
+      "top": 422.4,
+      "left": 864,
+      "attrs": { "text": "Dispensing Tank Valve" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "text4",
+      "top": 0,
+      "left": 220.8,
+      "attrs": { "text": "Display" }
+    }
   ],
   "connections": [
-    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
-    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
-    [ "tankRequestBtn:2.r", "esp:D13", "green", [ "h9.8", "v-127.5" ] ],
-    [ "flowPulseBtn:2.r", "esp:D26", "green", [ "h134.6", "v-22" ] ],
-    [ "chemicalOkBtn:2.r", "esp:D12", "green", [ "h29", "v-47.8", "h96", "v-98.4" ] ],
-    [ "buzzer:2", "esp:D25", "green", [ "v19.2", "h-0.4", "v35.3" ] ],
-    [ "ultrasonic:TRIG", "esp:D5", "green", [ "h-0.9", "v36.8" ] ],
-    [ "ultrasonic:GND", "esp:GND", "black", [] ],
-    [ "tankRequestBtn:1.l", "esp:GND", "black", [] ],
-    [ "flowPulseBtn:1.l", "esp:GND", "black", [] ],
-    [ "chemicalOkBtn:1.l", "esp:GND", "black", [] ],
-    [ "buzzer:1", "esp:GND", "black", [] ],
-    [ "esp:D18", "ultrasonic:ECHO", "green", [ "h0" ] ],
-    [ "esp:GND.2", "bb1:15t.a", "black", [ "h-31.4", "v108.6", "h240" ] ],
-    [ "tankRequestBtn:2.l", "bb1:14t.a", "black", [ "h-9.6", "v57.8", "h384" ] ],
-    [ "chemicalOkBtn:2.l", "bb1:13t.a", "black", [ "h-48", "v57.8", "h528" ] ],
-    [ "oled1:VCC", "esp:3V3", "red", [ "v-38.4", "h124.95", "v313.7" ] ],
-    [ "oled1:SDA", "esp:D21", "green", [ "v-19.2", "h96.07", "v198.9" ] ],
-    [ "oled1:SCL", "esp:D22", "green", [ "v-28.8", "h96.3", "v179.6" ] ],
-    [ "servo1:PWM", "esp:D4", "green", [ "h22", "v-100.2" ] ],
+    [ "centralNodeEsp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "centralNodeEsp:RX0", "$serialMonitor:TX", "", [] ],
+    [ "tankRequestBtn:2.r", "localNodeEsp:D13", "green", [ "h9.8", "v-127.5" ] ],
+    [ "flowPulseBtn:2.r", "centralNodeEsp:D26", "green", [ "h134.6", "v-22" ] ],
+    [ "chemicalOkBtn:2.r", "centralNodeEsp:D12", "green", [ "h29", "v-47.8", "h96", "v-98.4" ] ],
+    [ "buzzer:2", "centralNodeEsp:D25", "green", [ "v19.2", "h-0.4", "v35.3" ] ],
+    [ "ultrasonic:TRIG", "centralNodeEsp:D5", "green", [ "h-0.9", "v36.8" ] ],
+    [ "ultrasonic:GND", "centralNodeEsp:GND", "black", [] ],
+    [ "tankRequestBtn:1.l", "localNodeEsp:GND", "black", [] ],
+    [ "flowPulseBtn:1.l", "centralNodeEsp:GND", "black", [] ],
+    [ "chemicalOkBtn:1.l", "centralNodeEsp:GND", "black", [] ],
+    [ "buzzer:1", "centralNodeEsp:GND", "black", [] ],
+    [ "centralNodeEsp:D18", "ultrasonic:ECHO", "green", [ "h0" ] ],
+    [ "oled1:SDA", "centralNodeEsp:D21", "green", [ "v-19.2", "h96.07", "v198.9" ] ],
+    [ "oled1:SCL", "centralNodeEsp:D22", "green", [ "v-28.8", "h96.3", "v179.6" ] ],
+    [ "servo1:PWM", "localNodeEsp:D4", "green", [ "h-0.2", "v-76.9" ] ],
     [ "rgb1:R", "r1:1", "green", [ "v0" ] ],
     [ "rgb1:G", "r3:1", "green", [ "v0" ] ],
     [ "rgb1:B", "r2:1", "green", [ "v0" ] ],
-    [ "r1:2", "esp:D14", "green", [ "v66", "h451.2", "v-70.4" ] ],
-    [ "r3:2", "esp:D27", "green", [ "v37.2", "h412.8", "v-50.8" ] ],
-    [ "esp:D33", "r2:2", "green", [ "h-146.6", "v-131.3", "h-345.6", "v172.8", "h-28.8" ] ],
-    [ "rgb1:COM", "esp:3V3", "red", [ "v306.8", "h720.1" ] ],
-    [ "flowPulseBtn:2.l", "bb1:12t.a", "black", [ "h-19.2", "v221", "h537.6" ] ],
-    [ "buzzer:1", "bb1:11t.a", "black", [ "h-105.6", "v297.6", "h537.6" ] ],
-    [ "esp:VIN", "bb1:15b.f", "red", [ "h-21.8", "v89.5", "h268.8", "v201.6", "h-67.2" ] ],
-    [ "servo1:V+", "bb1:16b.f", "red", [ "h22", "v143.1", "h-211.2", "v86.4", "h-48" ] ],
-    [ "servo1:GND", "bb1:17t.a", "black", [ "h12.4", "v124", "h-240" ] ],
-    [ "ultrasonic:GND", "bb1:16t.a", "black", [ "v76.8", "h-183.6", "v0" ] ],
+    [ "r1:2", "centralNodeEsp:D14", "green", [ "v66", "h451.2", "v-70.4" ] ],
+    [ "r3:2", "centralNodeEsp:D27", "green", [ "v37.2", "h412.8", "v-50.8" ] ],
     [
-      "ultrasonic:VCC",
-      "bb1:17b.f",
-      "red",
-      [ "v86.4", "h0", "v0", "h115.2", "v0", "h0", "v268.8", "h-211.2", "v0", "h0", "v86.4" ]
+      "centralNodeEsp:D33",
+      "r2:2",
+      "green",
+      [ "h-146.6", "v-131.3", "h-345.6", "v172.8", "h-28.8" ]
     ],
-    [ "oled1:GND", "bb1:9t.a", "black", [ "v-28.8", "h-662.4", "v518.4", "h758.4" ] ]
+    [ "servo1:GND", "bb1:17b.i", "black", [ "v-76.8", "h96", "v374.4" ] ],
+    [ "tankRequestBtn:2.l", "bb1:15b.i", "black", [ "h-9.6", "v201.8", "h-192" ] ],
+    [ "bb1:17t.e", "ultrasonic:VCC", "red", [ "h38.4", "v-326.4", "h105.6" ] ],
+    [
+      "centralNodeEsp:VIN",
+      "bb1:16t.e",
+      "red",
+      [ "h-19.2", "v86.4", "h268.8", "v182.4", "h-38.4" ]
+    ],
+    [ "localNodeEsp:GND.1", "bb1:16b.i", "black", [ "h28.5", "v335.9", "h-432" ] ],
+    [ "rgb1:COM", "bb1:3t.c", "red", [ "v326", "h643.3" ] ],
+    [ "oled1:VCC", "bb1:2t.c", "red", [ "v-38.4", "h-681.45", "v547.2", "h700.8" ] ],
+    [
+      "centralNodeEsp:3V3",
+      "bb1:1t.c",
+      "red",
+      [ "h86.1", "v-326.4", "h-816", "v566.4", "h700.8" ]
+    ],
+    [ "localNodeEsp:VIN", "bb1:17b.j", "red", [ "h-28.8", "v345.6" ] ],
+    [ "servo1:V+", "bb1:16b.j", "red", [ "h-0.1", "v-86.3", "h115.2", "v403.1", "h-662.4" ] ],
+    [ "ultrasonic:GND", "bb1:17t.a", "black", [ "v96", "h-126", "v134.4", "h-48" ] ],
+    [ "centralNodeEsp:GND.2", "bb1:16t.a", "black", [ "h-28.8", "v105.5", "h240" ] ],
+    [ "chemicalOkBtn:2.l", "bb1:15t.a", "black", [ "h-48", "v48.2", "h547.2" ] ],
+    [ "flowPulseBtn:2.l", "bb1:14t.a", "black", [ "h-19.2", "v211.4", "h547.2" ] ],
+    [ "buzzer:1", "bb1:13t.a", "black", [ "v9.6", "h-105.6", "v278.4", "h547.2" ] ],
+    [ "oled1:GND", "bb1:12t.a", "black", [ "v-28.8", "h-662.4", "v499.2", "h787.2" ] ]
   ],
   "dependencies": {}
 }
