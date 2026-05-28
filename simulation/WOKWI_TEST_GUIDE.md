@@ -1,8 +1,9 @@
 # Wokwi Simulation Testing Guide
 
 ## Prerequisites
-- Build the PlatformIO environments so Wokwi can use the latest `.pio/build/controller/firmware.bin` and `.pio/build/local_node/firmware.bin`
-  Open **Wokwi Serial Monitor** (bottom panel)
+- Build both PlatformIO environments so Wokwi can use the latest `.pio/build/controller/firmware.bin` and `.pio/build/local_node/firmware.bin`
+- Open the **Wokwi Serial Monitor** and keep it attached to the central controller
+- Start the simulation after the build completes
 
 ---
 
@@ -13,28 +14,25 @@ The central ESP32 hosts a WiFi access point and the local node sends HTTP reques
 The request button and servo valve stay on the local node.
 The sensors, RGB LED, buzzer, and OLED stay on the central controller.
 
-## Full Refill Cycle Test (Button Press Method)
+## Full Refill Cycle Test
 
-**Refill denied immediately:**
+**Before you start:**
 - ✅ Make sure the central ESP32 is built from the `controller` PlatformIO environment
-- ✅ Make sure the local node is connected to the `HospitalCentral` WiFi network
+- ✅ Make sure the local node is built from the `local_node` PlatformIO environment
 - ✅ Check that the request button is wired to `localNodeEsp:D13` and the valve servo is wired to `localNodeEsp:D4`
+- ✅ Leave the controller serial monitor open so you can see the Wi‑Fi and refill logs
 
 **Expected Serial Output:**
 ```
-================================
-Hospital IoT Dispensing System
+[WIFI] AP started at 192.168.4.1
 System Started
-[HELP] Serial Commands:
-  's' = Start refill manually
-  'c' = Stop refill
-================================
+Ready
 ```
 
 **Visual Check:**
 - ✅ RGB LED should be **GREEN** (ready state)
 - ✅ OLED should display "System Started / Ready"
-- ✅ Central controller should report that it is waiting for local node requests
+- ✅ Local node should eventually log that it connected to the controller AP
 
 ---
 
@@ -44,7 +42,7 @@ System Started
 **Expected Serial Output (every 200ms):**
 ```
 Water Level: 98.03 cm
-[STATE] Tank=RELEASED Chemical=OK RefillActive=NO
+[WIFI] Connected, IP=192.168.4.x
 [STATE] Tank=RELEASED Chemical=OK RefillActive=NO
 ```
 
@@ -60,14 +58,8 @@ Water Level: 98.03 cm
 
 **Expected Serial Output (immediate):**
 ```
-[EVENT] Tank Refill Request - Starting validation
-[CHECK] Water Level: 98.03
-[CHECK] Chemical Status: OK
 [NODE] Sending refill request to central controller
 [NODE] Central response: APPROVE
-[INFO] Validation passed - Starting refill
-Refill Started
-Mixing Active
 ```
 
 **Visual Check:**
@@ -99,7 +91,7 @@ Mixing Active
 ### Step 5: Complete Refill (10 Pulses Reached)
 **Expected Serial Output:**
 ```
-[SUCCESS] TARGET REACHED - Refill Complete
+[REFILL DONE]
 ```
 
 **Visual Check:**
@@ -136,28 +128,11 @@ Mixing Active
 
 ---
 
-## Serial Command Fallback (If Buttons Don't Work)
-
-Open Wokwi serial monitor and type:
-
-| Command | Action |
-|---------|--------|
-| `s` | Start refill manually |
-| `c` | Stop refill |
-
-Example:
-```
-Type: s
-Output: [CMD] Manual START refill
-```
-
----
-
 ## Troubleshooting
 
 **Buttons don't respond:**
-- ✅ Try serial command `s` instead
 - ✅ Check Wokwi diagram connections for the local node request button and central controller sensors
+- ✅ Confirm that both firmware files were rebuilt after your last code change
 
 **Water level stuck at 98.03:**
 - ✅ This is normal (HC-SR04 in Wokwi is simulated at fixed distance)
@@ -172,7 +147,7 @@ Output: [CMD] Manual START refill
 
 **Refill denied immediately:**
 - ✅ Make sure the central ESP32 is built from the `controller` PlatformIO environment
-- ✅ Check that the local node is connected to the `HospitalCentral` WiFi network
+- ✅ Check that the local node prints a Wi‑Fi connection line in its serial output
 - ✅ Check that the request button is wired to `localNodeEsp:D13` and the valve servo is wired to `localNodeEsp:D4`
 
 ---
