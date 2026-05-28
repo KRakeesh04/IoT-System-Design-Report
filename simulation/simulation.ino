@@ -44,6 +44,14 @@ unsigned long lastFlowPulseTime = 0;
 const int TARGET_PULSES = 10;
 const unsigned long FLOW_TIMEOUT = 5000;
 const float TANK_HEIGHT_CM = 100.0;
+const float LOW_WATER_THRESHOLD_CM = 20.0;
+
+// Simulation override: if >= 0, `getDistanceCM()` will return this value (cm)
+float simulatedDistanceCM = -1.0;
+
+// RGB wiring mode: false = common-cathode (COM -> GND, write HIGH to light)
+// true = common-anode (COM -> VCC, write LOW to light)
+bool rgbCommonAnode = true;
 
 Servo valveServo;
 
@@ -52,6 +60,7 @@ int lastTankRaw = HIGH;
 unsigned long lastTankEventTime = 0;
 int lastFlowRaw = HIGH;
 unsigned long lastFlowEventTime = 0;
+bool lowWaterAlertActive = false;
 
 void IRAM_ATTR flowISR()
 {
@@ -108,6 +117,9 @@ void setup()
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
 
+  setupCentralWorkflow();
+  setupDispensingNodeWorkflow();
+
   // INITIAL RGB STATUS
   setRGBColor(false, true, false);
 
@@ -120,6 +132,7 @@ void setup()
 
   Serial.println("================================");
   Serial.println("Hospital IoT Dispensing System");
+  Serial.println("[ARCH] Split-node simulation enabled");
   Serial.println("System Started");
   Serial.println("[HELP] Serial Commands:");
   Serial.println("  's' = Start refill manually");
@@ -135,16 +148,45 @@ void loop()
 {
   if (Serial.available() > 0)
   {
-    char cmd = Serial.read();
-    if (cmd == 's')
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+    if (cmd.length() > 0)
     {
-      Serial.println("[CMD] Manual START refill");
-      validateAndStartRefill();
-    }
-    else if (cmd == 'c')
-    {
-      Serial.println("[CMD] Manual STOP refill");
-      stopRefill();
+      if (cmd == "s")
+      {
+        Serial.println("[CMD] Manual START refill");
+        validateAndStartRefill();
+      }
+      else if (cmd == "c")
+      {
+        Serial.println("[CMD] Manual STOP refill");
+        stopRefill();
+      }
+      else if (cmd.startsWith("D") || cmd.startsWith("d"))
+      {
+        // Set simulated distance in cm: e.g. D25.3
+        String num = cmd.substring(1);
+        float v = num.toFloat();
+        simulatedDistanceCM = v;
+        Serial.print("[SIM] Simulated distance set to ");
+        Serial.print(simulatedDistanceCM);
+        Serial.println(" cm");
+      }
+      else if (cmd == "R" || cmd == "r")
+      {
+        simulatedDistanceCM = -1.0;
+        Serial.println("[SIM] Simulated distance disabled");
+      }
+      else if (cmd == "ANODE")
+      {
+        rgbCommonAnode = true;
+        Serial.println("[CFG] RGB mode: COMMON ANODE (pins LOW = ON)");
+      }
+      else if (cmd == "CATHODE")
+      {
+        rgbCommonAnode = false;
+        Serial.println("[CFG] RGB mode: COMMON CATHODE (pins HIGH = ON)");
+      }
     }
   }
 
@@ -172,6 +214,34 @@ void monitorWaterLevel()
   Serial.print("Water Level: ");
   Serial.print(waterLevel);
   Serial.println(" cm");
+
+  if (waterLevel < LOW_WATER_THRESHOLD_CM)
+  {
+    if (!lowWaterAlertActive)
+    {
+      lowWaterAlertActive = true;
+      Serial.println("[ALERT] LOW WATER threshold reached");
+      displayMessage("FAULT", "LOW WATER");
+      setRGBColor(true, false, false);
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(120);
+      digitalWrite(BUZZER_PIN, LOW);
+    }
+    return;
+  }
+
+  sendNodeStatusToCentral(waterLevel, digitalRead(CHEMICAL_OK_PIN) == LOW, refillActive);
+
+  if (lowWaterAlertActive)
+  {
+    lowWaterAlertActive = false;
+    Serial.println("[INFO] Water level back to normal");
+    if (!refillActive)
+    {
+      setRGBColor(false, true, false);
+      displayMessage("System Started", "Ready");
+    }
+  }
 }
 
 // DISPENSING REQUEST CHECK
@@ -206,7 +276,8 @@ void checkDispensingRequest()
         lastTankRaw = stable;
         if (!refillActive)
         {
-          Serial.println("[EVENT] Tank button change detected (polarity-agnostic)");
+          Serial.println("[INPUT] Tank request received");
+          displayMessage("TANK REQUEST", "Received");
           validateAndStartRefill();
         }
       }
@@ -252,22 +323,34 @@ void validateAndStartRefill()
   Serial.println(waterLevel);
 
   // LOW WATER CHECK
-  if (waterLevel < 20)
+  if (waterLevel < LOW_WATER_THRESHOLD_CM)
   {
-    Serial.println("[FAULT] LOW WATER - Tank below 20cm");
+    Serial.println("[FAULT] LOW WATER - Tank below threshold");
     displayMessage("FAULT", "LOW WATER");
     faultState();
     return;
   }
 
-  // CHEMICAL CHECK - Log status but don't block (Wokwi may not simulate button)
+    // CHEMICAL CHECK - refill must not start unless chemical is OK
   int chemicalReading = digitalRead(CHEMICAL_OK_PIN);
   Serial.print("[CHECK] Chemical Status: ");
-  Serial.println(chemicalReading == LOW ? "OK" : "EMPTY (auto-bypass in sim)");
+    Serial.println(chemicalReading == LOW ? "OK" : "EMPTY");
 
-  // In Wokwi sim, auto-bypass chemical check if button doesn't work
-  // Uncomment next line to enforce chemical check:
-  // if (chemicalReading == HIGH) { faultState(); return; }
+    if (chemicalReading == HIGH)
+    {
+      Serial.println("[FAULT] CHEMICAL NOT OK - refill blocked");
+      displayMessage("FAULT", "CHEMICAL EMPTY");
+      faultState();
+      return;
+    }
+
+    if (!sendNodeStatusToCentral(waterLevel, true, refillActive))
+    {
+      Serial.println("[CENTRAL] Refill denied by central workflow");
+      displayMessage("FAULT", "CENTRAL DENIED");
+      faultState();
+      return;
+    }
 
   Serial.println("[INFO] Validation passed - Starting refill");
   startRefill();
@@ -386,9 +469,20 @@ void setRGBColor(
     bool blue)
 {
 
-  digitalWrite(RGB_RED_PIN, red);
-  digitalWrite(RGB_GREEN_PIN, green);
-  digitalWrite(RGB_BLUE_PIN, blue);
+  if (rgbCommonAnode)
+  {
+    // Common anode: drive pins LOW to turn color on
+    digitalWrite(RGB_RED_PIN, red ? LOW : HIGH);
+    digitalWrite(RGB_GREEN_PIN, green ? LOW : HIGH);
+    digitalWrite(RGB_BLUE_PIN, blue ? LOW : HIGH);
+  }
+  else
+  {
+    // Common cathode: drive pins HIGH to turn color on
+    digitalWrite(RGB_RED_PIN, red ? HIGH : LOW);
+    digitalWrite(RGB_GREEN_PIN, green ? HIGH : LOW);
+    digitalWrite(RGB_BLUE_PIN, blue ? HIGH : LOW);
+  }
 }
 
 // OLED MESSAGE
@@ -414,6 +508,12 @@ void displayMessage(
 float getDistanceCM()
 {
 
+  // If a simulated distance has been set via serial, use it (for Wokwi testing)
+  if (simulatedDistanceCM >= 0.0)
+  {
+    return simulatedDistanceCM;
+  }
+
   digitalWrite(TRIG_PIN, LOW);
 
   delayMicroseconds(2);
@@ -426,10 +526,23 @@ float getDistanceCM()
 
   long duration = pulseIn(
       ECHO_PIN,
-      HIGH);
+      HIGH,
+      30000); // timeout 30ms
 
-  float distance =
-      duration * 0.034 / 2.0;
+  if (duration <= 0)
+  {
+    // No echo received; return a large distance so waterLevel stays near 0
+    Serial.println("[DEBUG] pulseIn timeout or no echo");
+    return TANK_HEIGHT_CM; // assume empty reading
+  }
+
+  float distance = duration * 0.034 / 2.0;
+
+  Serial.print("[DEBUG] pulse duration= ");
+  Serial.print(duration);
+  Serial.print(" us, distance= ");
+  Serial.print(distance);
+  Serial.println(" cm");
 
   return distance;
 }

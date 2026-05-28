@@ -10,17 +10,24 @@
   Keep this file light so it does not change the current working sketch yet.
 */
 
-// Future helper names reserved for the split-node workflow.
-// They are left empty on purpose until the current step is approved.
-
 void setupCentralWorkflow()
 {
+  Serial.println("[CENTRAL] Split-node central workflow online");
 }
 
 void setupDispensingNodeWorkflow()
 {
+  Serial.println("[NODE] Dispensing node workflow online");
 }
 
-void sendNodeStatusToCentral()
+bool sendNodeStatusToCentral(float waterLevel, bool chemicalOk, bool refillActive)
 {
+  Serial.print("[CENTRAL] STATUS water=");
+  Serial.print(waterLevel);
+  Serial.print(" chemical=");
+  Serial.print(chemicalOk ? "OK" : "EMPTY");
+  Serial.print(" refill=");
+  Serial.println(refillActive ? "YES" : "NO");
+
+  return chemicalOk;
 }
