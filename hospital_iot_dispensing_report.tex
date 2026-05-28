@@ -1371,23 +1371,38 @@ WiFi with MQTT was selected because the proposed system operates inside a hospit
 \centering
 \small
 \setlength{\tabcolsep}{6pt}
-\begin{tabular}{@{} l l l @{}}
+\begin{tabularx}{\textwidth}{@{} l l l @{} }
 \toprule
-\textbf{Signal / Device} & \textbf{ESP32 Pin} & \textbf{Purpose} \\
+\textbf{Signal / Device} & \textbf{Controller (Central) Pin} & \textbf{Purpose} \\
 \midrule
 Ultrasonic TRIG & D5 & Trigger pulse for distance measurement \\
 Ultrasonic ECHO & D18 & Echo input (distance) \\
 OLED (SDA / SCL) & D21 / D22 & I2C display (0x3C) \\
-Servo PWM (valve) & D4 & Valve actuator in simulation (real system uses a normally-closed solenoid valve) \\
 RGB LED (R/G/B) & D14 / D27 / D33 & System status indicators \\
 Buzzer & D25 & Audible alarm/notification \\
-Push-button: Tank request & D13 & Manual refill request (active-low) \\
-Push-button: Flow pulse & D26 & Simulated flow pulses \\
-Push-button: Chemical / load-cell status & D12 & Simulated chemical level confirmation \\
+Flow pulse input & D26 & Flow pulse / YF-S201 input (simulated) \\
+Chemical OK (push) & D12 & Chemical / load-cell status (simulated) \\
 Serial & TX0 / RX0 & Debug / serial monitor \\
 \bottomrule
-\end{tabular}
-\caption{Pin summary for the ESP32 controller and primary peripherals (visual reference).}
+\end{tabularx}
+\caption{Controller pin summary (matches simulation/diagram.json and controller code).}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\textwidth}{@{} l l l @{} }
+\toprule
+\textbf{Signal / Device} & \textbf{Local Node Pin} & \textbf{Purpose} \\
+\midrule
+Tank request button & D13 & Manual refill request (active-low) \\
+Servo (valve emulation) & D4 & SG90 servo PWM (simulates solenoid) \\
+Wifi connect button & D15 & Request Wifi connect \\
+Blink LED & D26 & Status blink LED \\
+\bottomrule
+\end{tabularx}
+\caption{Local node pin summary (matches simulation wiring; local code pins shown where relevant).}
 \end{table}
 
 
@@ -1409,27 +1424,27 @@ Serial & TX0 / RX0 & Debug / serial monitor \\
 \chapter{Simulation of the prototype system in WokWi}
 
 \section{Simulation}
-The WokWi simulation uses an ESP32 DevKit V1 to demonstrate a single dispensing node and the central controller logic. The peripheral modules listed below represent the behavior of the real system in a simplified form.
+The Wokwi simulation implements a prototype demonstrating a single dispensing node interacting with a central controller. The simulation models peripheral modules and simplifies hardware behavior to validate software logic and communication flows.
 
-\noindent\textbf{Simulated parts:}
+\noindent\textbf{Simulated components:}
 \begin{itemize}
-    \item ESP32 DevKit V1 (main controller)
-    \item HC-SR04 ultrasonic distance sensor (tank level)
-    \item SSD1306 OLED display (I2C, address 0x3C)
-    \item SG90-style servo (used only in Wokwi to emulate solenoid valve actuation; the real system uses a normally-closed solenoid valve)
-    \item RGB LED (with series resistors on R/G/B lines)
-    \item Piezo buzzer
-    \item Three push-buttons to emulate: tank request, flow pulse, and chemical or load-cell status
-    \item Breadboard for power and common ground wiring
+    \item ESP32 DevKit V1 — main controller board used for local node and central controller firmware.
+    \item HC-SR04 ultrasonic sensor — emulates tank level measurement.
+    \item SSD1306 OLED (I2C, address 0x3C) — status display.
+    \item SG90 servo — emulates solenoid valve actuation (used only because Wokwi does not simulate solenoids).
+    \item RGB LED with series resistors — visual status indicators.
+    \item Piezo buzzer — audible alerts.
+    \item Push-buttons — emulate tank refill request, flow pulse input, and chemical/load-cell status.
+    \item Breadboard — power distribution and common ground for components in the diagram.
 \end{itemize}
-\vspace{4pt}
+
 \noindent\textbf{Simulation notes:}
 \begin{itemize}
-    \item The real system uses a normally-closed solenoid valve for flow control; a small servo is used in Wokwi only because Wokwi does not simulate solenoid valve hardware directly.
-    \item Load cell behavior in the simulation is represented by a push-button input. In the real system chemical level is measured by a load cell with an HX711 module.
-    \item Flow pulse generation in the simulation is emulated using a push-button to trigger pulses; in the real system the YF-S201 flow sensor produces pulse signals proportional to flow.
-    \item The Wokwi simulation demonstrates refill and monitoring logic for a single dispensing node, while the proposed real-world architecture supports multiple distributed dispensing tank blocks.
-    \item The simulation validates control logic and monitoring behavior only; it does not model actual fluid dynamics or chemical mixing physics.
+    \item The servo is a substitute for the normally-closed solenoid valve used in the physical system; it is included only for visualization in Wokwi.
+    \item Load cell behavior is approximated by a push-button in the simulation. In hardware this would be provided by a load cell and HX711 amplifier.
+    \item Flow pulse generation is emulated using a button; a YF‑S201 flow sensor would provide pulse signals in the real system.
+    \item The simulation demonstrates control and monitoring logic for a single node; the production architecture supports multiple distributed nodes.
+    \item The simulation is intended for functional verification of software and signal flows and does not model fluid dynamics or mixing physics.
 \end{itemize}
 \section{Source Code}
 
@@ -1460,6 +1475,9 @@ Wokwi, \textit{Online ESP32 Simulator and Firmware Builder}. [Online]. Available
 \bibitem{wikipedia-esp32}
 Wikipedia, \textit{ESP32}. [Online]. Available: \url{https://en.wikipedia.org/wiki/ESP32}
 
+\bibitem{vscode-esp32-platformio}
+YouTube, "Connect ESP32 to WiFi using Visual Studio Code and PlatformIO (Beginner Tutorial)", 2024. [Online]. Available: \url{https://youtu.be/aAG0bp0Q-y4?si=hmnsah4a_ZVhALW4}.
+
 \bibitem{vseeds-esp32}
 Vseeds.lk, ``ESP32 DevKit V1 Development Board,'' 2025. [Online]. Available: \url{https://www.vseeds.lk/products/esp32-dev-kit-v1}
 
@@ -1480,9 +1498,6 @@ Wikipedia, \textit{LoRa}. [Online]. Available: \url{https://en.wikipedia.org/wik
 
 \bibitem{chatgpt}
 OpenAI, "ChatGPT," used to help generate the system architecture image. [Online]. Available: \url{https://chat.openai.com/}.
-
-\bibitem{vscode-esp32-platformio}
-YouTube, "Connect ESP32 to WiFi using Visual Studio Code and PlatformIO (Beginner Tutorial)", 2024. [Online]. Available: \url{https://youtu.be/aAG0bp0Q-y4?si=hmnsah4a_ZVhALW4}.
 
 \end{thebibliography}
 
