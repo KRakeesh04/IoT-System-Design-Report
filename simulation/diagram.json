@@ -153,8 +153,8 @@
     }
   ],
   "connections": [
-    [ "centralNodeEsp:TX0", "$serialMonitor:RX", "", [] ],
-    [ "centralNodeEsp:RX0", "$serialMonitor:TX", "", [] ],
+    [ "localNodeEsp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "localNodeEsp:RX0", "$serialMonitor:TX", "", [] ],
     [ "tankRequestBtn:2.r", "localNodeEsp:D13", "green", [ "h9.8", "v-127.5" ] ],
     [ "flowPulseBtn:2.r", "centralNodeEsp:D26", "green", [ "h134.6", "v-22" ] ],
     [ "chemicalOkBtn:2.r", "centralNodeEsp:D12", "green", [ "h29", "v-47.8", "h96", "v-98.4" ] ],
@@ -172,7 +172,8 @@
     [ "oled1:SCL", "centralNodeEsp:D22", "green", [ "v-28.8", "h96.3", "v179.6" ] ],
     [ "servo1:PWM", "localNodeEsp:D4", "green", [ "h-0.2", "v-76.9" ] ],
     [ "led_blink:A", "r4:1", "green", [ "v0" ] ],
-    [ "r4:2", "localNodeEsp:D5", "green", [ "v66.7" ] ],
+    [ "r4:2", "localNodeEsp:D26", "green", [ "v66.7" ] ],
+    [ "led_blink:C", "localNodeEsp:GND.1", "black", [ "v-100" ] ],
     [ "rgb1:R", "r1:1", "green", [ "v0" ] ],
     [ "rgb1:G", "r3:1", "green", [ "v0" ] ],
     [ "rgb1:B", "r2:1", "green", [ "v0" ] ],
@@ -210,7 +211,6 @@
     [ "flowPulseBtn:2.l", "bb1:14t.a", "black", [ "h-19.2", "v211.4", "h547.2" ] ],
     [ "buzzer:1", "bb1:13t.a", "black", [ "v9.6", "h-105.6", "v278.4", "h547.2" ] ],
     [ "oled1:GND", "bb1:12t.a", "black", [ "v-28.8", "h-662.4", "v499.2", "h787.2" ] ],
-    [ "led_blink:C", "bb1:14b.i", "black", [ "v470.4", "h-489.2" ] ],
     [ "heartbeatBtn:2.l", "bb1:13b.i", "black", [ "h-9.6", "v163.4", "h-355.2" ] ]
   ],
   "dependencies": {}

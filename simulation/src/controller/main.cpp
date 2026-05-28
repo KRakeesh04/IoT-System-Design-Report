@@ -224,6 +224,16 @@ static void handleAnnounce()
   server.send(200, "text/plain", "OK");
 }
 
+static void handleDebug()
+{
+  String msg = server.arg("msg");
+  if (msg.length() > 0) {
+    Serial.print("[LOCAL_NODE] ");
+    Serial.println(msg);
+  }
+  server.send(200, "text/plain", "OK");
+}
+
 static void setupWiFiStationAndServer()
 {
   WiFi.mode(WIFI_STA);
@@ -261,6 +271,7 @@ static void setupWiFiStationAndServer()
   server.on("/status", HTTP_GET, handleStatus);
   server.on("/heartbeat", HTTP_GET, handleHeartbeat);
   server.on("/announce", HTTP_GET, handleAnnounce);
+  server.on("/debug", HTTP_GET, handleDebug);
   server.begin();
   Serial.println("[HTTP] server started");
 }
