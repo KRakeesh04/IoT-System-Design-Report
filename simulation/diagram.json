@@ -16,8 +16,8 @@
       "top": 43.1,
       "left": 177.4,
       "attrs": {
-        "firmware": "controller/controller.ino.bin",
-        "elf": "controller/controller.ino.elf",
+        "firmware": ".pio/build/controller/firmware.bin",
+        "elf": ".pio/build/controller/firmware.elf",
         "label": "Central Controller"
       }
     },
@@ -27,8 +27,8 @@
       "top": 43.1,
       "left": 695.8,
       "attrs": {
-        "firmware": "local_node/local_node.ino.bin",
-        "elf": "local_node/local_node.ino.elf",
+        "firmware": ".pio/build/local_node/firmware.bin",
+        "elf": ".pio/build/local_node/firmware.elf",
         "label": "Local Node"
       }
     },

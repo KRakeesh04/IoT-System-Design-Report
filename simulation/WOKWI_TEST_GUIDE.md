@@ -1,7 +1,7 @@
 # Wokwi Simulation Testing Guide
 
 ## Prerequisites
-- Reload Wokwi with the latest `simulation/controller/controller.ino.bin` and `simulation/local_node/local_node.ino.bin`
+- Build the PlatformIO environments so Wokwi can use the latest `.pio/build/controller/firmware.bin` and `.pio/build/local_node/firmware.bin`
   Open **Wokwi Serial Monitor** (bottom panel)
 
 ---
@@ -16,7 +16,7 @@ The sensors, RGB LED, buzzer, and OLED stay on the central controller.
 ## Full Refill Cycle Test (Button Press Method)
 
 **Refill denied immediately:**
-- ✅ Make sure the central ESP32 is loaded with `simulation/controller/controller.ino.bin`
+- ✅ Make sure the central ESP32 is built from the `controller` PlatformIO environment
 - ✅ Make sure the local node is connected to the `HospitalCentral` WiFi network
 - ✅ Check that the request button is wired to `localNodeEsp:D13` and the valve servo is wired to `localNodeEsp:D4`
 
