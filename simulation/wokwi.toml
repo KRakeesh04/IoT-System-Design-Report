@@ -1,0 +1,5 @@
+[wokwi]
+version = 1
+firmware = "simulation.ino.bin"
+elf = "simulation.ino.elf"
+diagram = "diagram.json"
