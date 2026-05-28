@@ -169,9 +169,9 @@ The peristaltic pump is used only for accurate concentrated chemical dosing into
 
 \subsection{Water Tank Measurement}
 
-A waterproof ultrasonic sensor was selected for measuring the purified water tank level because the hospital requested that no sensing device should be installed inside the tank due to periodic cleaning and maintenance operations.
+A waterproof ultrasonic sensor was selected to monitor the purified water tank level since the tank needs regular cleaning and maintenance and the internal sensor installation is not allowed.
 
-The ultrasonic sensor is mounted at the top of the tank and measures the distance between the sensor and the water surface. Since the sensor measures the empty space above the water, the actual water level can be determined by subtracting the measured distance from the effective internal height of the tank.
+The ultrasonic sensor is fixed above the tank, where it detects the water level by calculating the distance to the surface of the liquid. Since the sensor measures the empty space above the water, the actual water level can be determined by subtracting the measured distance from the effective internal height of the tank which is measured when the installation period is completed. We can use the sensor to calibrate for empty tank conditions.
 
 To improve measurement accuracy, the thickness of the tank lid and the wall thickness of the cylindrical tank are considered during calibration. The internal dimensions of the tank are used instead of external dimensions when calculating the actual water capacity.
 
@@ -180,10 +180,10 @@ The tank dimensions, wall thickness, lid thickness, and chemical density values 
 \noindent Let:
 
 \begin{itemize}
-    \item $LT$ = Lid thickness
+    \item $LT$ = Tank lid thickness
     \item $WT$ = Tank wall thickness
-    \item $H_{ext}$ = External tank height
-    \item $D_{ext}$ = External tank diameter
+    \item $H_{ext}$ = Tank external height
+    \item $D_{ext}$ = Tank external diameter
     \item $d$ = Measured distance from ultrasonic sensor to water surface
 \end{itemize}
 
@@ -273,10 +273,10 @@ This allows the system to estimate the remaining chemical quantity using both fl
 \noindent The difference between expected and measured chemical reduction can be calculated as:
 
 \begin{equation}
-Error = |Expected\ Reduction - Measured\ Reduction|
+Error = |Expected\ volume\ reduction - Measured\ volume\ reduction|
 \end{equation}
 
-If the error exceeds a predefined threshold, the system assumes abnormal operation such as:
+If the error exceeds a predefined threshold volume level, the system detects anomalies such as:
 
 \begin{itemize}
     \item Pipeline leakage
@@ -285,15 +285,15 @@ If the error exceeds a predefined threshold, the system assumes abnormal operati
     \item Unexpected chemical loss
 \end{itemize}
 
-The concentrated chemical dosing process is controlled using a PWM-controlled peristaltic pump together with a flow sensor. The peristaltic pump is used for accurate dosing into the 10L SS316 mixing chamber because the liquid only contacts the tube and the flow can be measured directly. Although PWM adjusts the pump speed, it does not guarantee accurate liquid flow due to pressure variations, tubing resistance, viscosity changes, and pump wear.
+The concentrated chemical dosing process is controlled using a peristaltic pump together with a flow sensor. The peristaltic pump is used for accurate dosing into the mixing chamber. Although PWM adjusts the pump speed, it does not guarantee accurate liquid flow because of variations in pressure, resistance in pipe, changes of viscosity and pump wear.
 Therefore, actual flow measurement is required for accurate dispensing control.
 
-Inside the mixing chamber, a top-mounted DC agitator motor rotates a mixing blade to maintain continuous mixing. This helps maintain uniform chemical concentration before the solution is supplied to the distribution line.
+Inside the mixing chamber, a DC agitator motor rotates a mixing blade to maintain consistent mixing. This helps maintain uniform chemical concentration before the solution is supplied to the distribution line.
 
-After mixing, a 12V DC diaphragm pump is placed after the mixing chamber and before the common dispensing pipeline. This pump is not used for concentration control; its purpose is to distribute the mixed solution from the mixing chamber to multiple dispensing tanks with stable pressure.
+The mixed chemical then passes through a 12V DC diaphragm pump fixed between the mixing chamber and the main distribution pipeline. The pump helps to move the prepared chemical evenly across multiple dispensing tanks while maintaining a consistent flow throughout the system.
 
-The refill operation only begins after all safety conditions are validated by the ESP32 controller.
-The required pre-conditions are:
+The refill operation only begins after all safety conditions are validated by the local and central esp32 controller.
+The required pre-conditions to be validated before starting the refill operation are:
 
 \begin{itemize}
     \item Sufficient water available
