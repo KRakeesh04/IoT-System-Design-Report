@@ -1427,7 +1427,14 @@ The WokWi simulation uses an ESP32 DevKit V1 to demonstrate a single dispensing 
 \end{itemize}
 \section{Source Code}
 
-\lstinputlisting[style=arduinoStyle,language=C++,label={lst:sketch},caption={ESP32 sketch for WokWi simulation}]{simulation/simulation.ino}
+\subsection{diagram.json file}
+\lstinputlisting[style=arduinoStyle,label={lst:diagram},caption={Wokwi project diagram json}]{simulation/diagram.json}
+
+\subsection{Controller Source Code}
+\lstinputlisting[style=arduinoStyle,language=C++,label={lst:controller},caption={Central controller source code}]{simulation/src/controller/main.cpp}
+
+\subsection{Local Node Source Code}
+\lstinputlisting[style=arduinoStyle,language=C++,label={lst:localnode},caption={Local node source code}]{simulation/src/local_node/main.cpp}
 
 
 \chapter*{Conclusion}
