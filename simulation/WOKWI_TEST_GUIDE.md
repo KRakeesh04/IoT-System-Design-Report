@@ -171,7 +171,7 @@ Output: [CMD] Manual START refill
 - ✅ Check RGB pinout (D14=RED, D27=GREEN, D33=BLUE)
 
 **Refill denied immediately:**
-- ✅ Make sure the central ESP32 is loaded with `simulation/controller/controller.ino.bin`
+- ✅ Make sure the central ESP32 is built from the `controller` PlatformIO environment
 - ✅ Check that the local node is connected to the `HospitalCentral` WiFi network
 - ✅ Check that the request button is wired to `localNodeEsp:D13` and the valve servo is wired to `localNodeEsp:D4`
 
