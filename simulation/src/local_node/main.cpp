@@ -14,7 +14,7 @@ const unsigned long DISCOVERY_RETRY_INTERVAL_MS = 2000;
 
 #define TANK_REQUEST_PIN 13
 #define SERVO_PIN 4
-#define BLINK_PIN 5
+#define BLINK_PIN 26
 #define HEARTBEAT_BTN_PIN 15
 
 Servo valveServo;
@@ -224,7 +224,7 @@ void setup()
 void loop()
 {
   maintainCentralWiFi();
-  // LED heartbeat: fast `heartbeat` when WiFi connected, slow blink when disconnected
+  // LED heartbeat: fast heartbeat when WiFi connected, slow blink when disconnected
   unsigned long now = millis();
   bool wifiReady = (WiFi.status() == WL_CONNECTED);
 
